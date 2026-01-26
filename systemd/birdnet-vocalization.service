@@ -1,0 +1,14 @@
+[Unit]
+Description=BirdNET Vocalization Classifier
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/birdnet-vocalization
+ExecStart=/usr/bin/python3 /opt/birdnet-vocalization/src/service.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
