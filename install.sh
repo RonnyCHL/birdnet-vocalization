@@ -20,7 +20,8 @@ NC='\033[0m' # No Color
 # Configuration
 REPO_URL="https://github.com/RonnyCHL/birdnet-vocalization"
 INSTALL_DIR="/opt/birdnet-vocalization"
-MODELS_URL_USA="https://drive.google.com/drive/folders/1eUu0ECYC3vIFX5HeRg9xyd_wfYb5Zn3i"
+MODELS_URL_USA="https://drive.google.com/drive/folders/1zJ-rR6FTEkGjVPt77VHRmuQLZGmoHnaD"
+MODELS_FOLDER_ID_USA="1zJ-rR6FTEkGjVPt77VHRmuQLZGmoHnaD"
 SERVICE_NAME="birdnet-vocalization"
 
 echo -e "${BLUE}"
@@ -125,20 +126,32 @@ echo -e "${BLUE}[5/6] Downloading models ($MODEL_SIZE)...${NC}"
 MODELS_DIR="$INSTALL_DIR/models"
 mkdir -p "$MODELS_DIR"
 
-# Check if gdown is available, otherwise use alternative
+# Install gdown if not available
+if ! command -v gdown &> /dev/null; then
+    echo "Installing gdown for Google Drive download..."
+    pip3 install --user gdown --quiet
+fi
+
+# Download models
+echo "Downloading models from Google Drive..."
 if command -v gdown &> /dev/null; then
-    echo "Downloading from Google Drive..."
-    # Download USA models folder
-    gdown --folder "1eUu0ECYC3vIFX5HeRg9xyd_wfYb5Zn3i" -O "$MODELS_DIR/usa/" --quiet || {
-        echo -e "${YELLOW}gdown failed, trying alternative method...${NC}"
+    gdown --folder "$MODELS_FOLDER_ID_USA" -O "$MODELS_DIR/" --quiet 2>/dev/null || {
+        echo -e "${YELLOW}Automatic download failed.${NC}"
+        echo ""
+        echo "Please manually download models from:"
+        echo -e "${BLUE}$MODELS_URL_USA${NC}"
+        echo ""
+        echo "And place the .pt files in: $MODELS_DIR/"
+        echo ""
+        read -p "Press Enter after downloading models to continue..."
     }
 else
-    echo -e "${YELLOW}Note: For automatic download, install gdown: pip3 install gdown${NC}"
+    echo -e "${YELLOW}Could not install gdown.${NC}"
     echo ""
     echo "Please manually download models from:"
     echo -e "${BLUE}$MODELS_URL_USA${NC}"
     echo ""
-    echo "And place them in: $MODELS_DIR/"
+    echo "And place the .pt files in: $MODELS_DIR/"
     echo ""
     read -p "Press Enter after downloading models to continue..."
 fi
