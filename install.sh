@@ -22,6 +22,8 @@ REPO_URL="https://github.com/RonnyCHL/birdnet-vocalization"
 INSTALL_DIR="/opt/birdnet-vocalization"
 MODELS_URL_USA="https://drive.google.com/drive/folders/1zJ-rR6FTEkGjVPt77VHRmuQLZGmoHnaD"
 MODELS_FOLDER_ID_USA="1zJ-rR6FTEkGjVPt77VHRmuQLZGmoHnaD"
+MODELS_URL_EUROPE="https://drive.google.com/drive/folders/1jtGWWTqWh4l0NmRZIHHAvzRTLjC0g--P"
+MODELS_FOLDER_ID_EUROPE="1jtGWWTqWh4l0NmRZIHHAvzRTLjC0g--P"
 SERVICE_NAME="birdnet-vocalization"
 
 echo -e "${BLUE}"
@@ -62,24 +64,47 @@ fi
 echo -e "${GREEN}Found BirdNET-Pi at: $BIRDNET_DIR${NC}"
 
 # Select region
-echo -e "${BLUE}[2/6] Select your region...${NC}"
+echo -e "${BLUE}[2/7] Select your region...${NC}"
 echo ""
-echo "  1) North America (46 species, ~75 MB)"
-echo "  2) Europe (coming soon)"
+echo "  1) North America - English (46 species, ~75 MB)"
+echo "  2) Europe - Dutch/Nederlands (199 species, ~7 GB)"
+echo "  3) Europe - German/Deutsch (199 species, ~7 GB)"
+echo "  4) Europe - English (199 species, ~7 GB)"
 echo ""
-read -p "Enter choice [1-2]: " REGION_CHOICE
+read -p "Enter choice [1-4]: " REGION_CHOICE
 
 case $REGION_CHOICE in
     1)
         REGION="usa"
+        LANGUAGE="en"
         MODEL_COUNT=46
         MODEL_SIZE="75 MB"
+        MODELS_FOLDER_ID="$MODELS_FOLDER_ID_USA"
+        MODELS_URL="$MODELS_URL_USA"
         ;;
     2)
-        echo -e "${YELLOW}European models coming soon! Using North America for now.${NC}"
-        REGION="usa"
-        MODEL_COUNT=46
-        MODEL_SIZE="75 MB"
+        REGION="europe"
+        LANGUAGE="nl"
+        MODEL_COUNT=199
+        MODEL_SIZE="7 GB"
+        MODELS_FOLDER_ID="$MODELS_FOLDER_ID_EUROPE"
+        MODELS_URL="$MODELS_URL_EUROPE"
+        ;;
+    3)
+        REGION="europe"
+        LANGUAGE="de"
+        MODEL_COUNT=199
+        MODEL_SIZE="7 GB"
+        MODELS_FOLDER_ID="$MODELS_FOLDER_ID_EUROPE"
+        MODELS_URL="$MODELS_URL_EUROPE"
+        ;;
+    4)
+        REGION="europe"
+        LANGUAGE="en"
+        MODEL_COUNT=199
+        MODEL_SIZE="7 GB"
+        MODELS_FOLDER_ID="$MODELS_FOLDER_ID_EUROPE"
+        MODELS_URL="$MODELS_URL_EUROPE"
         ;;
     *)
         echo -e "${RED}Invalid choice${NC}"
@@ -87,10 +112,10 @@ case $REGION_CHOICE in
         ;;
 esac
 
-echo -e "${GREEN}Selected: $REGION ($MODEL_COUNT species, $MODEL_SIZE)${NC}"
+echo -e "${GREEN}Selected: $REGION - $LANGUAGE ($MODEL_COUNT species, $MODEL_SIZE)${NC}"
 
 # Install dependencies
-echo -e "${BLUE}[3/6] Installing dependencies...${NC}"
+echo -e "${BLUE}[3/7] Installing dependencies...${NC}"
 
 # Check if pip packages are installed
 PACKAGES="torch librosa scikit-image numpy"
@@ -108,7 +133,7 @@ if [ -n "$MISSING" ]; then
 fi
 
 # Clone repository
-echo -e "${BLUE}[4/6] Downloading vocalization classifier...${NC}"
+echo -e "${BLUE}[4/7] Downloading vocalization classifier...${NC}"
 
 if [ -d "$INSTALL_DIR" ]; then
     echo "Updating existing installation..."
@@ -121,7 +146,7 @@ else
 fi
 
 # Download models
-echo -e "${BLUE}[5/6] Downloading models ($MODEL_SIZE)...${NC}"
+echo -e "${BLUE}[5/7] Downloading models ($MODEL_SIZE)...${NC}"
 
 MODELS_DIR="$INSTALL_DIR/models"
 mkdir -p "$MODELS_DIR"
@@ -134,12 +159,16 @@ fi
 
 # Download models
 echo "Downloading models from Google Drive..."
+if [ "$MODEL_SIZE" = "7 GB" ]; then
+    echo -e "${YELLOW}Note: European models are ~7 GB. This may take a while...${NC}"
+fi
+
 if command -v gdown &> /dev/null; then
-    gdown --folder "$MODELS_FOLDER_ID_USA" -O "$MODELS_DIR/" --quiet 2>/dev/null || {
+    gdown --folder "$MODELS_FOLDER_ID" -O "$MODELS_DIR/" --quiet 2>/dev/null || {
         echo -e "${YELLOW}Automatic download failed.${NC}"
         echo ""
         echo "Please manually download models from:"
-        echo -e "${BLUE}$MODELS_URL_USA${NC}"
+        echo -e "${BLUE}$MODELS_URL${NC}"
         echo ""
         echo "And place the .pt files in: $MODELS_DIR/"
         echo ""
@@ -149,7 +178,7 @@ else
     echo -e "${YELLOW}Could not install gdown.${NC}"
     echo ""
     echo "Please manually download models from:"
-    echo -e "${BLUE}$MODELS_URL_USA${NC}"
+    echo -e "${BLUE}$MODELS_URL${NC}"
     echo ""
     echo "And place the .pt files in: $MODELS_DIR/"
     echo ""
@@ -160,11 +189,11 @@ fi
 MODEL_FILES=$(find "$MODELS_DIR" -name "*.pt" 2>/dev/null | wc -l)
 if [ "$MODEL_FILES" -eq 0 ]; then
     echo -e "${YELLOW}Warning: No models found. Service will start but won't classify.${NC}"
-    echo "Download models from: $MODELS_URL_USA"
+    echo "Download models from: $MODELS_URL"
 fi
 
 # Create systemd service
-echo -e "${BLUE}[6/6] Setting up service...${NC}"
+echo -e "${BLUE}[6/7] Setting up classification service...${NC}"
 
 sudo tee /etc/systemd/system/${SERVICE_NAME}.service > /dev/null <<EOF
 [Unit]
@@ -175,7 +204,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$INSTALL_DIR
-ExecStart=/usr/bin/python3 $INSTALL_DIR/src/service.py --birdnet-dir $BIRDNET_DIR --models-dir $MODELS_DIR
+ExecStart=/usr/bin/python3 $INSTALL_DIR/src/service.py --birdnet-dir $BIRDNET_DIR --models-dir $MODELS_DIR --language $LANGUAGE
 Restart=on-failure
 RestartSec=10
 
@@ -187,6 +216,30 @@ sudo systemctl daemon-reload
 sudo systemctl enable ${SERVICE_NAME}
 sudo systemctl start ${SERVICE_NAME}
 
+# Setup web viewer service
+echo -e "${BLUE}[7/7] Setting up web viewer...${NC}"
+
+sudo tee /etc/systemd/system/${SERVICE_NAME}-viewer.service > /dev/null <<EOF
+[Unit]
+Description=BirdNET Vocalization Web Viewer
+After=network.target
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=$INSTALL_DIR
+ExecStart=/usr/bin/python3 $INSTALL_DIR/src/webviewer.py --data-dir $INSTALL_DIR/data
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable ${SERVICE_NAME}-viewer
+sudo systemctl start ${SERVICE_NAME}-viewer
+
 # Done!
 echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗"
@@ -195,13 +248,15 @@ echo -e "╚══════════════════════�
 echo ""
 echo "The vocalization classifier is now running!"
 echo ""
+echo -e "${GREEN}Web Viewer: http://$(hostname -I | awk '{print $1}'):8088${NC}"
+echo ""
 echo "Commands:"
 echo "  Status:   sudo systemctl status ${SERVICE_NAME}"
 echo "  Logs:     journalctl -u ${SERVICE_NAME} -f"
-echo "  Stop:     sudo systemctl stop ${SERVICE_NAME}"
-echo "  Start:    sudo systemctl start ${SERVICE_NAME}"
+echo "  Viewer:   sudo systemctl status ${SERVICE_NAME}-viewer"
 echo ""
 echo "Data stored in: $INSTALL_DIR/data/vocalization.db"
+echo "Language: $LANGUAGE"
 echo ""
 echo -e "${BLUE}Thank you for using BirdNET Vocalization!${NC}"
 echo "Report issues: https://github.com/RonnyCHL/birdnet-vocalization/issues"

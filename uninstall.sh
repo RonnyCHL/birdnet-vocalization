@@ -34,7 +34,7 @@ echo -e "${NC}"
 echo -e "${YELLOW}This will completely remove BirdNET Vocalization.${NC}"
 echo ""
 echo "The following will be deleted:"
-echo "  - Service: ${SERVICE_NAME}"
+echo "  - Services: ${SERVICE_NAME}, ${SERVICE_NAME}-viewer"
 echo "  - Directory: ${INSTALL_DIR}"
 echo "  - Data: ${INSTALL_DIR}/data/vocalization.db"
 echo ""
@@ -47,29 +47,28 @@ fi
 
 echo ""
 
-# Stop and disable service
-echo -e "${BLUE}[1/3] Stopping service...${NC}"
-if systemctl is-active --quiet ${SERVICE_NAME} 2>/dev/null; then
-    sudo systemctl stop ${SERVICE_NAME}
-    echo "Service stopped."
-else
-    echo "Service was not running."
-fi
+# Stop and disable services
+echo -e "${BLUE}[1/3] Stopping services...${NC}"
+for svc in ${SERVICE_NAME} ${SERVICE_NAME}-viewer; do
+    if systemctl is-active --quiet ${svc} 2>/dev/null; then
+        sudo systemctl stop ${svc}
+        echo "${svc} stopped."
+    fi
+    if systemctl is-enabled --quiet ${svc} 2>/dev/null; then
+        sudo systemctl disable ${svc}
+        echo "${svc} disabled."
+    fi
+done
 
-if systemctl is-enabled --quiet ${SERVICE_NAME} 2>/dev/null; then
-    sudo systemctl disable ${SERVICE_NAME}
-    echo "Service disabled."
-fi
-
-# Remove service file
-echo -e "${BLUE}[2/3] Removing service file...${NC}"
-if [ -f "/etc/systemd/system/${SERVICE_NAME}.service" ]; then
-    sudo rm "/etc/systemd/system/${SERVICE_NAME}.service"
-    sudo systemctl daemon-reload
-    echo "Service file removed."
-else
-    echo "Service file not found."
-fi
+# Remove service files
+echo -e "${BLUE}[2/3] Removing service files...${NC}"
+for svc in ${SERVICE_NAME} ${SERVICE_NAME}-viewer; do
+    if [ -f "/etc/systemd/system/${svc}.service" ]; then
+        sudo rm "/etc/systemd/system/${svc}.service"
+        echo "${svc}.service removed."
+    fi
+done
+sudo systemctl daemon-reload
 
 # Remove installation directory
 echo -e "${BLUE}[3/3] Removing installation directory...${NC}"

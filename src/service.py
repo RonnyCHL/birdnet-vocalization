@@ -40,15 +40,16 @@ logger = logging.getLogger(__name__)
 class VocalizationService:
     """Service that monitors BirdNET-Pi and classifies vocalizations."""
 
-    def __init__(self, birdnet_dir: Path, models_dir: Path, data_dir: Path):
+    def __init__(self, birdnet_dir: Path, models_dir: Path, data_dir: Path, language: str = 'en'):
         self.birdnet_dir = birdnet_dir
         self.birdnet_db = birdnet_dir / "scripts" / "birds.db"
         self.extracted_dir = birdnet_dir / "extracted" / "By_Date"
 
         self.data_dir = data_dir
         self.vocalization_db = data_dir / "vocalization.db"
+        self.language = language
 
-        self.classifier = VocalizationClassifier(models_dir)
+        self.classifier = VocalizationClassifier(models_dir, language=language)
         self.running = False
         self.last_processed_id = 0
 
@@ -70,6 +71,7 @@ class VocalizationService:
                 common_name TEXT,
                 scientific_name TEXT,
                 vocalization_type TEXT,
+                vocalization_type_display TEXT,
                 confidence REAL,
                 probabilities TEXT,
                 classified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -172,14 +174,15 @@ class VocalizationService:
         cursor.execute("""
             INSERT OR REPLACE INTO vocalizations
             (birdnet_id, file_name, common_name, scientific_name,
-             vocalization_type, confidence, probabilities)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+             vocalization_type, vocalization_type_display, confidence, probabilities)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             detection['rowid'],
             detection.get('File_Name', ''),
             detection.get('Com_Name', ''),
             detection.get('Sci_Name', ''),
             result['type'],
+            result['type_display'],
             result['confidence'],
             json.dumps(result['probabilities'])
         ))
@@ -222,7 +225,7 @@ class VocalizationService:
                 self._store_result(detection, result)
                 classified += 1
                 logger.info(
-                    f"{species}: {result['type']} ({result['confidence']:.0%})"
+                    f"{species}: {result['type_display']} ({result['confidence']:.0%})"
                 )
 
             self.last_processed_id = rowid
@@ -282,13 +285,21 @@ def main():
         default=DEFAULT_INTERVAL,
         help=f"Check interval in seconds (default: {DEFAULT_INTERVAL})"
     )
+    parser.add_argument(
+        "--language",
+        type=str,
+        default="en",
+        choices=["en", "nl", "de"],
+        help="Language for vocalization types: en (song/call/alarm), nl (zang/roep/alarm), de (Gesang/Ruf/Alarm)"
+    )
 
     args = parser.parse_args()
 
     service = VocalizationService(
         birdnet_dir=args.birdnet_dir,
         models_dir=args.models_dir,
-        data_dir=args.data_dir
+        data_dir=args.data_dir,
+        language=args.language
     )
 
     # Handle graceful shutdown

@@ -51,6 +51,25 @@ FMIN = 500
 FMAX = 8000
 SEGMENT_DURATION = 3.0
 
+# Translations for vocalization types
+TRANSLATIONS = {
+    'en': {
+        'song': 'song',
+        'call': 'call',
+        'alarm': 'alarm'
+    },
+    'nl': {
+        'song': 'zang',
+        'call': 'roep',
+        'alarm': 'alarm'
+    },
+    'de': {
+        'song': 'Gesang',
+        'call': 'Ruf',
+        'alarm': 'Alarm'
+    }
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -113,13 +132,14 @@ class VocalizationClassifier:
             print(f"{result['type']} ({result['confidence']:.0%})")
     """
 
-    def __init__(self, models_dir: str | Path, max_cached_models: int = 5):
+    def __init__(self, models_dir: str | Path, max_cached_models: int = 5, language: str = 'en'):
         self.models_dir = Path(models_dir)
         self.models_cache = {}
         self.cache_order = []  # LRU tracking
         self.max_cached_models = max_cached_models
         self.available_models = {}
         self._initialized = False
+        self.language = language if language in TRANSLATIONS else 'en'
 
     def _init_lazy(self):
         """Lazy initialization - only load when needed."""
@@ -290,8 +310,13 @@ class VocalizationClassifier:
             confidence = probas[class_idx].item()
             voc_type = class_names[class_idx]
 
+            # Translate type to selected language
+            trans = TRANSLATIONS.get(self.language, TRANSLATIONS['en'])
+            voc_type_translated = trans.get(voc_type, voc_type)
+
             return {
-                'type': voc_type,
+                'type': voc_type,  # Always English internally
+                'type_display': voc_type_translated,  # Translated for display
                 'confidence': confidence,
                 'model': model_path.name,
                 'probabilities': {
