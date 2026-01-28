@@ -543,9 +543,13 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
         // Stats and coverage
         async function loadStats() {
+            console.log('loadStats() called');
             try {
+                console.log('Fetching /api/stats...');
                 const res = await fetch('/api/stats');
+                console.log('Response status:', res.status);
                 const stats = await res.json();
+                console.log('Stats data:', stats);
                 const coverage = stats.coverage || { covered: 0, total: 0, percent: 0 };
                 document.getElementById('stats').innerHTML = `
                     <div class="stat-card"><h3>${stats.total}</h3><p>Total</p></div>
@@ -554,7 +558,10 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                     <div class="stat-card"><h3>${stats.alarm || 0}</h3><p>Alarms</p></div>
                     <div class="stat-card coverage"><h3>${coverage.covered}/${coverage.total} (${coverage.percent}%)</h3><p>Model Coverage</p></div>
                 `;
-            } catch (e) { console.error('Stats error:', e); }
+            } catch (e) {
+                console.error('Stats error:', e);
+                console.error('Stack:', e.stack);
+            }
         }
 
         // Charts
@@ -674,14 +681,24 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
             try {
                 console.log('BirdNET Vocalization Viewer initializing...');
+                console.log('Document ready state:', document.readyState);
 
                 // Event listeners
-                document.getElementById('filter-type').addEventListener('change', loadData);
-                document.getElementById('filter-species').addEventListener('input', loadData);
+                var filterType = document.getElementById('filter-type');
+                var filterSpecies = document.getElementById('filter-species');
+                console.log('filter-type element:', filterType);
+                console.log('filter-species element:', filterSpecies);
 
+                if (filterType) filterType.addEventListener('change', loadData);
+                if (filterSpecies) filterSpecies.addEventListener('input', loadData);
+
+                console.log('Calling initTheme...');
                 initTheme();
+                console.log('Calling checkUpdate...');
                 checkUpdate();
+                console.log('Calling loadStats...');
                 loadStats();
+                console.log('Calling loadData...');
                 loadData();
 
                 // Chart.js loads asynchronously after init
