@@ -23,17 +23,28 @@ from classifier import VocalizationClassifier
 
 # Configuration
 DEFAULT_BIRDNET_DIR = Path("/home/pi/BirdNET-Pi")
+DEFAULT_DATA_DIR = Path("/opt/birdnet-vocalization/data")
 DEFAULT_INTERVAL = 30  # seconds between checks
 MIN_CONFIDENCE = 0.5   # minimum confidence to store result
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('/var/log/birdnet-vocalization.log')
-    ]
-)
+
+def setup_logging(data_dir: Path):
+    """Setup logging to data directory (writable by service user)."""
+    data_dir.mkdir(parents=True, exist_ok=True)
+    log_file = data_dir / "service.log"
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(),
+            logging.FileHandler(log_file)
+        ]
+    )
+    return logging.getLogger(__name__)
+
+
+# Will be initialized in main()
 logger = logging.getLogger(__name__)
 
 
@@ -294,6 +305,10 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # Setup logging first (needs data_dir)
+    global logger
+    logger = setup_logging(args.data_dir)
 
     service = VocalizationService(
         birdnet_dir=args.birdnet_dir,
