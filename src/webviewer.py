@@ -705,12 +705,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             }
         }
 
-        // Initialize when DOM is ready
-        if (document.readyState === 'complete') {
-            init();
-        } else {
-            window.addEventListener('load', init);
-        }
+        // Initialize immediately
+        setTimeout(init, 100);
     </script>
 </body>
 </html>"""
