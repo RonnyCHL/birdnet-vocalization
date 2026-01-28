@@ -714,23 +714,25 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         }
 
         // Initialize when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded fired');
+            init();
+        });
+
+        // Fallback if DOMContentLoaded already fired
+        if (document.readyState !== 'loading') {
+            console.log('Document already loaded, calling init');
             init();
         }
-
-        // Load Chart.js asynchronously
-        var chartScript = document.createElement('script');
-        chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
-        chartScript.onload = function() {
-            console.log('Chart.js loaded');
-            if (typeof loadCharts === 'function' && typeof Chart !== 'undefined') {
-                loadCharts();
-                setInterval(loadCharts, 60000);
-            }
-        };
-        document.head.appendChild(chartScript);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        // Load charts after Chart.js is available
+        console.log('Chart.js script block, Chart available:', typeof Chart !== 'undefined');
+        if (typeof Chart !== 'undefined' && typeof loadCharts === 'function') {
+            loadCharts();
+            setInterval(loadCharts, 60000);
+        }
     </script>
 </body>
 </html>"""
