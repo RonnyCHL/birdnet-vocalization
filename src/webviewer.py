@@ -762,9 +762,9 @@ class VocalizationHandler(BaseHTTPRequestHandler):
     def apply_update(self):
         """Apply the update by pulling from git and restarting services."""
         try:
-            # Pull latest changes
+            # Pull latest changes (explicitly specify origin/master to avoid tracking issues)
             result = subprocess.run(
-                ["git", "pull"],
+                ["git", "pull", "origin", "master"],
                 capture_output=True,
                 text=True,
                 cwd=INSTALL_DIR

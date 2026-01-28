@@ -178,6 +178,7 @@ elif [ -d "$INSTALL_DIR" ]; then
     git remote add origin "$REPO_URL"
     git fetch origin
     git reset --hard origin/master
+    git branch --set-upstream-to=origin/master master
 else
     # Fresh install
     sudo mkdir -p "$INSTALL_DIR"
