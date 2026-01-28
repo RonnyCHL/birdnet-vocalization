@@ -62,7 +62,7 @@ When BirdNET-Pi detects a bird, this addon classifies the *type* of vocalization
 ## Quick Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash
 ```
 
 The installer will:
@@ -153,7 +153,7 @@ Options:
 ## Uninstall
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/main/uninstall.sh | bash
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/uninstall.sh | bash
 ```
 
 Your BirdNET-Pi installation will not be affected.
@@ -257,7 +257,7 @@ Wanneer BirdNET-Pi een vogel detecteert, classificeert deze addon het *type* voc
 ## Snelle Installatie
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash
 ```
 
 De installer zal:
@@ -346,7 +346,7 @@ Opties:
 ## Verwijderen
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/main/uninstall.sh | bash
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/uninstall.sh | bash
 ```
 
 Je BirdNET-Pi installatie wordt niet aangetast.
