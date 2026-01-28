@@ -292,6 +292,16 @@ sudo systemctl daemon-reload
 sudo systemctl enable ${SERVICE_NAME}-viewer
 sudo systemctl start ${SERVICE_NAME}-viewer
 
+# Add sudoers rule for passwordless service restart (needed for web update)
+echo -e "${BLUE}Setting up auto-update permissions...${NC}"
+SUDOERS_FILE="/etc/sudoers.d/birdnet-vocalization"
+sudo tee $SUDOERS_FILE > /dev/null <<EOF
+# Allow $USER to restart birdnet-vocalization services without password
+$USER ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart birdnet-vocalization
+$USER ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart birdnet-vocalization-viewer
+EOF
+sudo chmod 440 $SUDOERS_FILE
+
 # Done!
 IP_ADDR=$(hostname -I | awk '{print $1}')
 echo ""
