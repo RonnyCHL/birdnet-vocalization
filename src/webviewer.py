@@ -543,13 +543,9 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
         // Stats and coverage
         async function loadStats() {
-            console.log('loadStats() called');
             try {
-                console.log('Fetching /api/stats...');
                 const res = await fetch('/api/stats');
-                console.log('Response status:', res.status);
                 const stats = await res.json();
-                console.log('Stats data:', stats);
                 const coverage = stats.coverage || { covered: 0, total: 0, percent: 0 };
                 document.getElementById('stats').innerHTML = `
                     <div class="stat-card"><h3>${stats.total}</h3><p>Total</p></div>
@@ -560,7 +556,6 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                 `;
             } catch (e) {
                 console.error('Stats error:', e);
-                console.error('Stack:', e.stack);
             }
         }
 
@@ -680,25 +675,13 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             initialized = true;
 
             try {
-                console.log('BirdNET Vocalization Viewer initializing...');
-                console.log('Document ready state:', document.readyState);
-
                 // Event listeners
-                var filterType = document.getElementById('filter-type');
-                var filterSpecies = document.getElementById('filter-species');
-                console.log('filter-type element:', filterType);
-                console.log('filter-species element:', filterSpecies);
+                document.getElementById('filter-type').addEventListener('change', loadData);
+                document.getElementById('filter-species').addEventListener('input', loadData);
 
-                if (filterType) filterType.addEventListener('change', loadData);
-                if (filterSpecies) filterSpecies.addEventListener('input', loadData);
-
-                console.log('Calling initTheme...');
                 initTheme();
-                console.log('Calling checkUpdate...');
                 checkUpdate();
-                console.log('Calling loadStats...');
                 loadStats();
-                console.log('Calling loadData...');
                 loadData();
 
                 // Chart.js loads asynchronously after init
@@ -714,21 +697,11 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         }
 
         // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOMContentLoaded fired');
-            init();
-        });
-
-        // Fallback if DOMContentLoaded already fired
-        if (document.readyState !== 'loading') {
-            console.log('Document already loaded, calling init');
-            init();
-        }
+        document.addEventListener('DOMContentLoaded', init);
+        if (document.readyState !== 'loading') init();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
-        // Load charts after Chart.js is available
-        console.log('Chart.js script block, Chart available:', typeof Chart !== 'undefined');
         if (typeof Chart !== 'undefined' && typeof loadCharts === 'function') {
             loadCharts();
             setInterval(loadCharts, 60000);
