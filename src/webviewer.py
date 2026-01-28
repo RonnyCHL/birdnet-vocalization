@@ -13,6 +13,8 @@ import argparse
 import json
 import os
 import sqlite3
+import subprocess
+import urllib.request
 from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
@@ -20,6 +22,8 @@ from urllib.parse import parse_qs, urlparse
 
 DEFAULT_PORT = 8088
 DEFAULT_DATA_DIR = Path("/opt/birdnet-vocalization/data")
+INSTALL_DIR = Path("/opt/birdnet-vocalization")
+GITHUB_API_URL = "https://api.github.com/repos/RonnyCHL/birdnet-vocalization/commits/master"
 
 
 class VocalizationHandler(BaseHTTPRequestHandler):
@@ -36,6 +40,16 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             self.send_vocalizations(parsed.query)
         elif parsed.path == "/api/stats":
             self.send_stats()
+        elif parsed.path == "/api/update/check":
+            self.check_update()
+        else:
+            self.send_error(404, "Not Found")
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+
+        if parsed.path == "/api/update/apply":
+            self.apply_update()
         else:
             self.send_error(404, "Not Found")
 
@@ -57,10 +71,57 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             padding: 20px;
         }
         .container { max-width: 1200px; margin: 0 auto; }
-        h1 {
-            text-align: center;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+        }
+        h1 {
             color: #4ecca3;
+        }
+        .update-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .update-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #666;
+        }
+        .update-dot.available {
+            background: #f9ed69;
+            animation: pulse 2s infinite;
+        }
+        .update-dot.checking {
+            background: #4ecca3;
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .update-btn {
+            background: #f9ed69;
+            color: #1a1a2e;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            display: none;
+        }
+        .update-btn:hover { background: #e6d85f; }
+        .update-btn.visible { display: inline-block; }
+        .update-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .version-info {
+            font-size: 0.8em;
+            color: #666;
         }
         .stats {
             display: grid;
@@ -126,15 +187,65 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         }
         .refresh-btn:hover { background: #3db892; }
         .empty { text-align: center; padding: 50px; color: #666; }
+        .update-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .update-modal.visible { display: flex; }
+        .update-modal-content {
+            background: #16213e;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            text-align: center;
+        }
+        .update-modal h2 { color: #4ecca3; margin-bottom: 15px; }
+        .update-modal p { margin-bottom: 20px; color: #888; }
+        .update-modal pre {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: left;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; }
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .modal-btn.primary { background: #4ecca3; color: #1a1a2e; }
+        .modal-btn.secondary { background: #666; color: #eee; }
         @media (max-width: 600px) {
             .filters { flex-direction: column; }
             th, td { padding: 10px; font-size: 0.9em; }
+            .header { flex-direction: column; gap: 15px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>BirdNET Vocalization</h1>
+        <div class="header">
+            <h1>BirdNET Vocalization</h1>
+            <div class="update-indicator">
+                <span class="version-info" id="version-info"></span>
+                <div class="update-dot" id="update-dot" title="Checking for updates..."></div>
+                <button class="update-btn" id="update-btn" onclick="showUpdateModal()">Update Available</button>
+            </div>
+        </div>
 
         <div class="stats" id="stats">
             <div class="stat-card"><h3>-</h3><p>Total</p></div>
@@ -167,7 +278,98 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         </table>
     </div>
 
+    <div class="update-modal" id="update-modal">
+        <div class="update-modal-content">
+            <h2>Update Available</h2>
+            <p id="update-message">A new version is available.</p>
+            <pre id="update-details"></pre>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="hideUpdateModal()">Later</button>
+                <button class="modal-btn primary" id="apply-update-btn" onclick="applyUpdate()">Update Now</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let updateInfo = null;
+
+        async function checkUpdate() {
+            const dot = document.getElementById('update-dot');
+            const btn = document.getElementById('update-btn');
+            const versionInfo = document.getElementById('version-info');
+
+            dot.className = 'update-dot checking';
+            dot.title = 'Checking for updates...';
+
+            try {
+                const res = await fetch('/api/update/check');
+                const data = await res.json();
+                updateInfo = data;
+
+                versionInfo.textContent = 'v' + data.local_commit.substring(0, 7);
+
+                if (data.update_available) {
+                    dot.className = 'update-dot available';
+                    dot.title = 'Update available!';
+                    btn.classList.add('visible');
+                } else {
+                    dot.className = 'update-dot';
+                    dot.style.background = '#4ecca3';
+                    dot.title = 'Up to date';
+                    btn.classList.remove('visible');
+                }
+            } catch (e) {
+                console.error('Update check error:', e);
+                dot.className = 'update-dot';
+                dot.style.background = '#f38181';
+                dot.title = 'Could not check for updates';
+            }
+        }
+
+        function showUpdateModal() {
+            if (!updateInfo) return;
+
+            const modal = document.getElementById('update-modal');
+            const details = document.getElementById('update-details');
+            const message = document.getElementById('update-message');
+
+            message.textContent = `New version available: ${updateInfo.remote_commit.substring(0, 7)}`;
+            details.textContent = updateInfo.commit_message || 'No commit message available';
+
+            modal.classList.add('visible');
+        }
+
+        function hideUpdateModal() {
+            document.getElementById('update-modal').classList.remove('visible');
+        }
+
+        async function applyUpdate() {
+            const btn = document.getElementById('apply-update-btn');
+            const details = document.getElementById('update-details');
+
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+            details.textContent = 'Pulling latest changes and restarting services...\\nThis may take a moment.';
+
+            try {
+                const res = await fetch('/api/update/apply', { method: 'POST' });
+                const data = await res.json();
+
+                if (data.success) {
+                    details.textContent = data.output + '\\n\\nUpdate complete! Reloading page...';
+                    setTimeout(() => window.location.reload(), 3000);
+                } else {
+                    details.textContent = 'Update failed:\\n' + data.error;
+                    btn.disabled = false;
+                    btn.textContent = 'Retry';
+                }
+            } catch (e) {
+                details.textContent = 'Update failed: ' + e.message;
+                btn.disabled = false;
+                btn.textContent = 'Retry';
+            }
+        }
+
         async function loadStats() {
             try {
                 const res = await fetch('/api/stats');
@@ -216,10 +418,15 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         document.getElementById('filter-type').addEventListener('change', loadData);
         document.getElementById('filter-species').addEventListener('input', loadData);
 
+        // Initial load
+        checkUpdate();
         loadStats();
         loadData();
+
+        // Periodic refresh
         setInterval(loadData, 30000);
         setInterval(loadStats, 30000);
+        setInterval(checkUpdate, 300000);  // Check for updates every 5 minutes
     </script>
 </body>
 </html>"""
@@ -228,6 +435,84 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", len(html))
         self.end_headers()
         self.wfile.write(html.encode())
+
+    def check_update(self):
+        """Check if an update is available."""
+        try:
+            # Get local commit
+            result = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                capture_output=True,
+                text=True,
+                cwd=INSTALL_DIR
+            )
+            local_commit = result.stdout.strip() if result.returncode == 0 else "unknown"
+
+            # Get remote commit from GitHub API
+            req = urllib.request.Request(
+                GITHUB_API_URL,
+                headers={"User-Agent": "BirdNET-Vocalization-Updater"}
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                data = json.loads(response.read().decode())
+                remote_commit = data.get("sha", "")
+                commit_message = data.get("commit", {}).get("message", "")
+
+            update_available = local_commit != remote_commit and remote_commit != ""
+
+            self.send_json({
+                "update_available": update_available,
+                "local_commit": local_commit,
+                "remote_commit": remote_commit,
+                "commit_message": commit_message.split("\n")[0]  # First line only
+            })
+        except Exception as e:
+            self.send_json({
+                "update_available": False,
+                "local_commit": "unknown",
+                "remote_commit": "unknown",
+                "error": str(e)
+            })
+
+    def apply_update(self):
+        """Apply the update by pulling from git and restarting services."""
+        try:
+            # Pull latest changes
+            result = subprocess.run(
+                ["git", "pull"],
+                capture_output=True,
+                text=True,
+                cwd=INSTALL_DIR
+            )
+
+            if result.returncode != 0:
+                self.send_json({
+                    "success": False,
+                    "error": result.stderr
+                })
+                return
+
+            output = result.stdout
+
+            # Restart services
+            subprocess.run(
+                ["sudo", "systemctl", "restart", "birdnet-vocalization"],
+                capture_output=True
+            )
+            subprocess.run(
+                ["sudo", "systemctl", "restart", "birdnet-vocalization-viewer"],
+                capture_output=True
+            )
+
+            self.send_json({
+                "success": True,
+                "output": output
+            })
+        except Exception as e:
+            self.send_json({
+                "success": False,
+                "error": str(e)
+            })
 
     def send_vocalizations(self, query_string):
         """Send vocalizations as JSON."""
