@@ -704,10 +704,21 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             }
         }
 
-        // Initialize immediately - call init directly
-        init();
+        // Initialize when Chart.js is loaded
+        function waitForChartJs() {
+            if (typeof Chart !== 'undefined') {
+                console.log('Chart.js loaded, initializing...');
+                init();
+            } else {
+                console.log('Waiting for Chart.js...');
+                setTimeout(waitForChartJs, 100);
+            }
+        }
+
+        // Start checking after a brief delay
+        setTimeout(waitForChartJs, 50);
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" onload="console.log('Chart.js script loaded')"></script>
 </body>
 </html>"""
         self.send_response(200)
