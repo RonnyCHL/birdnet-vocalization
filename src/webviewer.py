@@ -417,8 +417,9 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
-        // Wait for page to fully load before initializing
+        // Chart.js loaded above, now define functions
         let updateInfo = null;
         let timeChart = null;
         let speciesChart = null;
@@ -704,21 +705,9 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             }
         }
 
-        // Initialize when Chart.js is loaded
-        function waitForChartJs() {
-            if (typeof Chart !== 'undefined') {
-                console.log('Chart.js loaded, initializing...');
-                init();
-            } else {
-                console.log('Waiting for Chart.js...');
-                setTimeout(waitForChartJs, 100);
-            }
-        }
-
-        // Start checking after a brief delay
-        setTimeout(waitForChartJs, 50);
+        // Initialize immediately - Chart.js already loaded above
+        init();
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" onload="console.log('Chart.js script loaded')"></script>
 </body>
 </html>"""
         self.send_response(200)
