@@ -61,7 +61,7 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 # Detect BirdNET-Pi installation
-echo -e "${BLUE}[1/6] Detecting BirdNET-Pi installation...${NC}"
+echo -e "${BLUE}[1/7] Detecting BirdNET-Pi installation...${NC}"
 
 BIRDNET_DIR=""
 for dir in "/home/$USER/BirdNET-Pi" "/home/pi/BirdNET-Pi" "/opt/BirdNET-Pi"; do
@@ -154,36 +154,36 @@ esac
 
 echo -e "${GREEN}Selected: $REGION - $LANGUAGE ($MODEL_COUNT species, $MODEL_SIZE)${NC}"
 
-# Install dependencies
-echo -e "${BLUE}[3/7] Installing dependencies...${NC}"
-
-# Check if pip packages are installed
-PACKAGES="torch librosa scikit-image numpy"
-MISSING=""
-
-for pkg in $PACKAGES; do
-    if ! python3 -c "import $pkg" 2>/dev/null; then
-        MISSING="$MISSING $pkg"
-    fi
-done
-
-if [ -n "$MISSING" ]; then
-    echo "Installing Python packages:$MISSING"
-    pip3 install --user $MISSING
-fi
-
-# Clone repository
-echo -e "${BLUE}[4/7] Downloading vocalization classifier...${NC}"
+# Clone repository first (we need the directory for venv)
+echo -e "${BLUE}[3/7] Downloading vocalization classifier...${NC}"
 
 if [ -d "$INSTALL_DIR" ]; then
     echo "Updating existing installation..."
     cd "$INSTALL_DIR"
-    sudo -u $USER git pull
+    git pull || true
 else
     sudo mkdir -p "$INSTALL_DIR"
     sudo chown $USER:$USER "$INSTALL_DIR"
     git clone "$REPO_URL" "$INSTALL_DIR"
 fi
+
+# Create virtual environment and install dependencies
+echo -e "${BLUE}[4/7] Setting up Python environment...${NC}"
+
+VENV_DIR="$INSTALL_DIR/venv"
+PYTHON_BIN="$VENV_DIR/bin/python3"
+PIP_BIN="$VENV_DIR/bin/pip3"
+GDOWN_BIN="$VENV_DIR/bin/gdown"
+
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv "$VENV_DIR"
+fi
+
+# Install packages in venv
+echo "Installing Python packages (this may take a few minutes)..."
+"$PIP_BIN" install --upgrade pip --quiet
+"$PIP_BIN" install torch librosa scikit-image numpy gdown --quiet
 
 # Download models
 echo -e "${BLUE}[5/7] Downloading models ($MODEL_SIZE)...${NC}"
@@ -191,46 +191,35 @@ echo -e "${BLUE}[5/7] Downloading models ($MODEL_SIZE)...${NC}"
 MODELS_DIR="$INSTALL_DIR/models"
 mkdir -p "$MODELS_DIR"
 
-# Install gdown if not available
-if ! command -v gdown &> /dev/null; then
-    echo "Installing gdown for Google Drive download..."
-    pip3 install --user gdown --quiet
-fi
-
-# Download models
 echo "Downloading models from Google Drive..."
 if [ "$MODEL_SIZE" = "7 GB" ]; then
     echo -e "${YELLOW}Note: European models are ~7 GB. This may take a while...${NC}"
 fi
 
-if command -v gdown &> /dev/null; then
-    gdown --folder "$MODELS_FOLDER_ID" -O "$MODELS_DIR/" --quiet 2>/dev/null || {
-        echo -e "${YELLOW}Automatic download failed.${NC}"
-        echo ""
-        echo "Please manually download models from:"
-        echo -e "${BLUE}$MODELS_URL${NC}"
-        echo ""
-        echo "And place the .pt files in: $MODELS_DIR/"
-        echo ""
-        read -p "Press Enter after downloading models to continue..."
-    }
-else
-    echo -e "${YELLOW}Could not install gdown.${NC}"
+"$GDOWN_BIN" --folder "$MODELS_FOLDER_ID" -O "$MODELS_DIR/" --quiet 2>/dev/null || {
+    echo -e "${YELLOW}Automatic download failed.${NC}"
     echo ""
     echo "Please manually download models from:"
     echo -e "${BLUE}$MODELS_URL${NC}"
     echo ""
     echo "And place the .pt files in: $MODELS_DIR/"
     echo ""
-    read -p "Press Enter after downloading models to continue..."
-fi
+    if [ -t 0 ]; then
+        read -p "Press Enter after downloading models to continue..."
+    fi
+}
 
 # Verify models
 MODEL_FILES=$(find "$MODELS_DIR" -name "*.pt" 2>/dev/null | wc -l)
 if [ "$MODEL_FILES" -eq 0 ]; then
     echo -e "${YELLOW}Warning: No models found. Service will start but won't classify.${NC}"
     echo "Download models from: $MODELS_URL"
+else
+    echo -e "${GREEN}Found $MODEL_FILES models${NC}"
 fi
+
+# Create data directory
+mkdir -p "$INSTALL_DIR/data"
 
 # Create systemd service
 echo -e "${BLUE}[6/7] Setting up classification service...${NC}"
@@ -244,7 +233,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$INSTALL_DIR
-ExecStart=/usr/bin/python3 $INSTALL_DIR/src/service.py --birdnet-dir $BIRDNET_DIR --models-dir $MODELS_DIR --language $LANGUAGE
+ExecStart=$PYTHON_BIN $INSTALL_DIR/src/service.py --birdnet-dir $BIRDNET_DIR --models-dir $MODELS_DIR --language $LANGUAGE
 Restart=on-failure
 RestartSec=10
 
@@ -268,7 +257,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$INSTALL_DIR
-ExecStart=/usr/bin/python3 $INSTALL_DIR/src/webviewer.py --data-dir $INSTALL_DIR/data
+ExecStart=$PYTHON_BIN $INSTALL_DIR/src/webviewer.py --data-dir $INSTALL_DIR/data
 Restart=on-failure
 RestartSec=10
 
