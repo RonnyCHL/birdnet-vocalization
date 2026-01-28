@@ -494,20 +494,20 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
             output = result.stdout
 
-            # Restart services
-            subprocess.run(
-                ["sudo", "systemctl", "restart", "birdnet-vocalization"],
-                capture_output=True
-            )
-            subprocess.run(
-                ["sudo", "systemctl", "restart", "birdnet-vocalization-viewer"],
-                capture_output=True
-            )
-
+            # Send success response FIRST, before restarting
             self.send_json({
                 "success": True,
                 "output": output
             })
+
+            # Restart services in background with delay so response can be sent
+            # Using nohup and sleep to ensure this process completes even after we return
+            subprocess.Popen(
+                ["bash", "-c", "sleep 2 && sudo systemctl restart birdnet-vocalization && sudo systemctl restart birdnet-vocalization-viewer"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
+            )
         except Exception as e:
             self.send_json({
                 "success": False,
