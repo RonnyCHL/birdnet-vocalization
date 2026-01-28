@@ -193,29 +193,38 @@ mkdir -p "$MODELS_DIR"
 
 echo "Downloading models from Google Drive..."
 if [ "$MODEL_SIZE" = "7 GB" ]; then
-    echo -e "${YELLOW}Note: European models are ~7 GB. This may take a while...${NC}"
+    echo -e "${YELLOW}Note: European models are ~7 GB. This may take 10-30 minutes...${NC}"
 fi
 
-"$GDOWN_BIN" --folder "$MODELS_FOLDER_ID" -O "$MODELS_DIR/" --quiet 2>/dev/null || {
-    echo -e "${YELLOW}Automatic download failed.${NC}"
+# Use --remaining-ok to handle folders with >50 files
+# Run multiple times to get all files (gdown limitation)
+DOWNLOAD_ATTEMPTS=5
+for i in $(seq 1 $DOWNLOAD_ATTEMPTS); do
+    echo "Download pass $i of $DOWNLOAD_ATTEMPTS..."
+    "$GDOWN_BIN" --folder "$MODELS_FOLDER_ID" -O "$MODELS_DIR/" --remaining-ok 2>&1 | grep -v "^Processing\|^Retrieving\|^Downloading" || true
+
+    # Check if we have enough models
+    CURRENT_MODELS=$(find "$MODELS_DIR" -name "*.pt" 2>/dev/null | wc -l)
+    if [ "$CURRENT_MODELS" -ge "$MODEL_COUNT" ]; then
+        echo -e "${GREEN}Downloaded all $CURRENT_MODELS models${NC}"
+        break
+    fi
+    echo "Found $CURRENT_MODELS models so far..."
+done
+
+# Final check
+MODEL_FILES=$(find "$MODELS_DIR" -name "*.pt" 2>/dev/null | wc -l)
+if [ "$MODEL_FILES" -lt "$MODEL_COUNT" ]; then
+    echo -e "${YELLOW}Downloaded $MODEL_FILES of $MODEL_COUNT models.${NC}"
     echo ""
-    echo "Please manually download models from:"
+    echo "Some models may be missing. You can manually download from:"
     echo -e "${BLUE}$MODELS_URL${NC}"
     echo ""
-    echo "And place the .pt files in: $MODELS_DIR/"
+    echo "And place additional .pt files in: $MODELS_DIR/"
     echo ""
     if [ -t 0 ]; then
-        read -p "Press Enter after downloading models to continue..."
+        read -p "Press Enter to continue anyway..."
     fi
-}
-
-# Verify models
-MODEL_FILES=$(find "$MODELS_DIR" -name "*.pt" 2>/dev/null | wc -l)
-if [ "$MODEL_FILES" -eq 0 ]; then
-    echo -e "${YELLOW}Warning: No models found. Service will start but won't classify.${NC}"
-    echo "Download models from: $MODELS_URL"
-else
-    echo -e "${GREEN}Found $MODEL_FILES models${NC}"
 fi
 
 # Create data directory
