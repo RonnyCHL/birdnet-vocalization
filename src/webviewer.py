@@ -705,8 +705,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             }
         }
 
-        // Initialize immediately
-        setTimeout(init, 100);
+        // Initialize immediately - call init directly
+        init();
     </script>
 </body>
 </html>"""
