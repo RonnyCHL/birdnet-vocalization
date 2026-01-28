@@ -68,7 +68,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BirdNET Vocalization Viewer</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer onerror="console.error('Chart.js failed to load')"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-primary: #1a1a2e;
@@ -676,32 +676,41 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         function init() {
             if (initialized) return;
             initialized = true;
-            console.log('BirdNET Vocalization Viewer initializing...');
-            initTheme();
-            checkUpdate();
-            loadStats();
-            loadData();
 
-            // Load charts only if Chart.js is available
-            if (typeof Chart !== 'undefined') {
-                console.log('Chart.js loaded successfully');
-                loadCharts();
-                setInterval(loadCharts, 60000);
-            } else {
-                console.log('Chart.js not available - charts disabled');
-                document.querySelectorAll('.chart-card').forEach(el => {
-                    el.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 50px;">Charts unavailable</p>';
-                });
+            try {
+                console.log('BirdNET Vocalization Viewer initializing...');
+                initTheme();
+                checkUpdate();
+                loadStats();
+                loadData();
+
+                // Load charts only if Chart.js is available
+                if (typeof Chart !== 'undefined') {
+                    console.log('Chart.js loaded successfully');
+                    loadCharts();
+                    setInterval(loadCharts, 60000);
+                } else {
+                    console.log('Chart.js not available - charts disabled');
+                    document.querySelectorAll('.chart-card').forEach(function(el) {
+                        el.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 50px;">Charts unavailable</p>';
+                    });
+                }
+
+                // Periodic refresh
+                setInterval(loadData, 30000);
+                setInterval(loadStats, 60000);
+                setInterval(checkUpdate, 300000);
+            } catch (e) {
+                console.error('Init error:', e);
             }
-
-            // Periodic refresh
-            setInterval(loadData, 30000);
-            setInterval(loadStats, 60000);
-            setInterval(checkUpdate, 300000);
         }
 
-        // Wait for window load (ensures all scripts including deferred ones are loaded)
-        window.addEventListener('load', init);
+        // Initialize when DOM is ready
+        if (document.readyState === 'complete') {
+            init();
+        } else {
+            window.addEventListener('load', init);
+        }
     </script>
 </body>
 </html>"""
