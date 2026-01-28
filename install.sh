@@ -280,7 +280,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$INSTALL_DIR
-ExecStart=$PYTHON_BIN $INSTALL_DIR/src/webviewer.py --data-dir $INSTALL_DIR/data
+ExecStart=$PYTHON_BIN $INSTALL_DIR/src/webviewer.py --data-dir $INSTALL_DIR/data --birdnet-dir $BIRDNET_DIR --models-dir $MODELS_DIR
 Restart=on-failure
 RestartSec=10
 

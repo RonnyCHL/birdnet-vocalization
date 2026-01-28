@@ -2,13 +2,10 @@
 #
 # BirdNET Vocalization Uninstaller
 #
-# Completely removes the vocalization classifier from your system
+# Completely removes the vocalization classifier from your system.
 #
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/main/uninstall.sh | bash
-#
-# Or if already installed:
-#   /opt/birdnet-vocalization/uninstall.sh
+#   bash /opt/birdnet-vocalization/uninstall.sh
 #
 
 set -e
@@ -18,80 +15,94 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Configuration
 INSTALL_DIR="/opt/birdnet-vocalization"
 SERVICE_NAME="birdnet-vocalization"
 
-echo -e "${BLUE}"
-echo "╔════════════════════════════════════════════════════════════╗"
-echo "║       BirdNET Vocalization Uninstaller                     ║"
-echo "╚════════════════════════════════════════════════════════════╝"
+echo ""
+echo -e "${YELLOW}"
+echo "    ╔══════════════════════════════════════════╗"
+echo "    ║   BirdNET Vocalization Uninstaller       ║"
+echo "    ╚══════════════════════════════════════════╝"
 echo -e "${NC}"
+echo ""
+
+# Check if running as root
+if [ "$EUID" -eq 0 ]; then
+    echo -e "${RED}Please don't run as root. The script will use sudo when needed.${NC}"
+    exit 1
+fi
 
 # Confirm
-echo -e "${YELLOW}This will completely remove BirdNET Vocalization.${NC}"
+echo -e "${YELLOW}This will completely remove BirdNET Vocalization from your system.${NC}"
 echo ""
-echo "The following will be deleted:"
-echo "  - Services: ${SERVICE_NAME}, ${SERVICE_NAME}-viewer"
-echo "  - Directory: ${INSTALL_DIR}"
-echo "  - Data: ${INSTALL_DIR}/data/vocalization.db"
+echo "  The following will be removed:"
+echo "    - Services (classifier and web viewer)"
+echo "    - Installation directory ($INSTALL_DIR)"
+echo "    - Sudoers configuration"
 echo ""
-read -p "Are you sure? (y/N): " CONFIRM
+echo -e "${BLUE}Your BirdNET-Pi installation will NOT be affected.${NC}"
+echo ""
 
-if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+read -p "Are you sure you want to uninstall? [y/N]: " confirm
+if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     echo "Uninstall cancelled."
     exit 0
 fi
 
 echo ""
+echo -e "${BLUE}[1/4] Stopping services...${NC}"
+sudo systemctl stop ${SERVICE_NAME} 2>/dev/null || true
+sudo systemctl stop ${SERVICE_NAME}-viewer 2>/dev/null || true
+sudo systemctl disable ${SERVICE_NAME} 2>/dev/null || true
+sudo systemctl disable ${SERVICE_NAME}-viewer 2>/dev/null || true
+echo -e "${GREEN}Services stopped${NC}"
 
-# Stop and disable services
-echo -e "${BLUE}[1/3] Stopping services...${NC}"
-for svc in ${SERVICE_NAME} ${SERVICE_NAME}-viewer; do
-    if systemctl is-active --quiet ${svc} 2>/dev/null; then
-        sudo systemctl stop ${svc}
-        echo "${svc} stopped."
-    fi
-    if systemctl is-enabled --quiet ${svc} 2>/dev/null; then
-        sudo systemctl disable ${svc}
-        echo "${svc} disabled."
-    fi
-done
-
-# Remove service files
-echo -e "${BLUE}[2/3] Removing service files...${NC}"
-for svc in ${SERVICE_NAME} ${SERVICE_NAME}-viewer; do
-    if [ -f "/etc/systemd/system/${svc}.service" ]; then
-        sudo rm "/etc/systemd/system/${svc}.service"
-        echo "${svc}.service removed."
-    fi
-done
+echo -e "${BLUE}[2/4] Removing service files...${NC}"
+sudo rm -f /etc/systemd/system/${SERVICE_NAME}.service
+sudo rm -f /etc/systemd/system/${SERVICE_NAME}-viewer.service
 sudo systemctl daemon-reload
+echo -e "${GREEN}Service files removed${NC}"
 
-# Remove installation directory
-echo -e "${BLUE}[3/3] Removing installation directory...${NC}"
-if [ -d "$INSTALL_DIR" ]; then
-    sudo rm -rf "$INSTALL_DIR"
-    echo "Directory removed."
+echo -e "${BLUE}[3/4] Removing sudoers configuration...${NC}"
+sudo rm -f /etc/sudoers.d/birdnet-vocalization
+echo -e "${GREEN}Sudoers configuration removed${NC}"
+
+echo -e "${BLUE}[4/4] Removing installation directory...${NC}"
+# Ask about data
+if [ -f "$INSTALL_DIR/data/vocalization.db" ]; then
+    echo ""
+    echo -e "${YELLOW}Found vocalization database with your classification history.${NC}"
+    read -p "Keep the data directory for backup? [Y/n]: " keep_data
+    if [[ "$keep_data" =~ ^[Nn]$ ]]; then
+        sudo rm -rf "$INSTALL_DIR"
+        echo -e "${GREEN}Installation directory removed (including data)${NC}"
+    else
+        # Move data to home directory
+        BACKUP_DIR="$HOME/birdnet-vocalization-backup"
+        mkdir -p "$BACKUP_DIR"
+        cp -r "$INSTALL_DIR/data" "$BACKUP_DIR/"
+        echo -e "${GREEN}Data backed up to: $BACKUP_DIR${NC}"
+        sudo rm -rf "$INSTALL_DIR"
+        echo -e "${GREEN}Installation directory removed${NC}"
+    fi
 else
-    echo "Directory not found."
-fi
-
-# Remove log file
-if [ -f "/var/log/birdnet-vocalization.log" ]; then
-    sudo rm "/var/log/birdnet-vocalization.log"
-    echo "Log file removed."
+    sudo rm -rf "$INSTALL_DIR"
+    echo -e "${GREEN}Installation directory removed${NC}"
 fi
 
 echo ""
-echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗"
-echo -e "║           Uninstall Complete!                              ║"
-echo -e "╚════════════════════════════════════════════════════════════╝${NC}"
+echo -e "${GREEN}"
+echo "    ╔══════════════════════════════════════════╗"
+echo "    ║   ✓  Uninstall Complete!                 ║"
+echo "    ╚══════════════════════════════════════════╝"
+echo -e "${NC}"
 echo ""
-echo "BirdNET Vocalization has been removed from your system."
-echo "Your BirdNET-Pi installation was not modified."
+echo "  BirdNET Vocalization has been removed from your system."
+echo ""
+echo "  To reinstall:"
+echo "    bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh)"
 echo ""
 echo -e "${BLUE}Thank you for trying BirdNET Vocalization!${NC}"
-echo "Feedback: https://github.com/RonnyCHL/birdnet-vocalization/issues"
+echo ""
