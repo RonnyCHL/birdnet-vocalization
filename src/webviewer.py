@@ -419,9 +419,11 @@ class VocalizationHandler(BaseHTTPRequestHandler):
     </div>
 
     <script>
+        // Wait for page to fully load before initializing
         let updateInfo = null;
         let timeChart = null;
         let speciesChart = null;
+        let initialized = false;
 
         // Theme management
         function toggleTheme() {
@@ -670,18 +672,31 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         document.getElementById('filter-type').addEventListener('change', loadData);
         document.getElementById('filter-species').addEventListener('input', loadData);
 
-        // Initial load
-        initTheme();
-        checkUpdate();
-        loadStats();
-        loadCharts();
-        loadData();
+        // Initialize after page load
+        function init() {
+            if (initialized) return;
+            initialized = true;
+            console.log('BirdNET Vocalization Viewer initializing...');
+            console.log('Chart.js loaded:', typeof Chart !== 'undefined');
+            initTheme();
+            checkUpdate();
+            loadStats();
+            loadCharts();
+            loadData();
 
-        // Periodic refresh
-        setInterval(loadData, 30000);
-        setInterval(loadStats, 60000);
-        setInterval(loadCharts, 60000);
-        setInterval(checkUpdate, 300000);
+            // Periodic refresh
+            setInterval(loadData, 30000);
+            setInterval(loadStats, 60000);
+            setInterval(loadCharts, 60000);
+            setInterval(checkUpdate, 300000);
+        }
+
+        // Wait for DOM and Chart.js
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 </body>
 </html>"""
