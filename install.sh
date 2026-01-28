@@ -40,19 +40,30 @@ NC='\033[0m' # No Color
 # Configuration
 REPO_URL="https://github.com/RonnyCHL/birdnet-vocalization"
 INSTALL_DIR="/opt/birdnet-vocalization"
-MODELS_URL_USA="https://drive.google.com/drive/folders/1zJ-rR6FTEkGjVPt77VHRmuQLZGmoHnaD"
-MODELS_FOLDER_ID_USA="1zJ-rR6FTEkGjVPt77VHRmuQLZGmoHnaD"
-MODELS_URL_EUROPE="https://drive.google.com/drive/folders/1jtGWWTqWh4l0NmRZIHHAvzRTLjC0g--P"
-MODELS_FOLDER_ID_EUROPE="1jtGWWTqWh4l0NmRZIHHAvzRTLjC0g--P"
+HF_REPO="RonnyCHL/birdnet-vocalization-models"
 SERVICE_NAME="birdnet-vocalization"
 
+echo ""
 echo -e "${BLUE}"
-echo "╔════════════════════════════════════════════════════════════╗"
-echo "║       BirdNET Vocalization Classifier Installer            ║"
-echo "║                                                            ║"
-echo "║  Adds song/call/alarm classification to BirdNET-Pi         ║"
-echo "╚════════════════════════════════════════════════════════════╝"
+echo "    ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫"
+echo ""
+echo "        ╔══════════════════════════════════════════╗"
+echo "        ║   🐦  BirdNET Vocalization Classifier    ║"
+echo "        ╚══════════════════════════════════════════╝"
+echo ""
+echo "           Is it a song, a call, or an alarm?"
+echo ""
+echo "    ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫"
 echo -e "${NC}"
+echo ""
+echo "  This addon adds vocalization type classification to your"
+echo "  BirdNET-Pi. When BirdNET detects a bird, this classifier"
+echo "  will tell you if it's singing, calling, or giving an alarm."
+echo ""
+echo "  • Song  = Territory marking, attracting mates"
+echo "  • Call  = Contact calls, flock communication"
+echo "  • Alarm = Predator nearby! (cat, hawk, etc.)"
+echo ""
 
 # Check if running as root
 if [ "$EUID" -eq 0 ]; then
@@ -119,32 +130,28 @@ case $REGION_CHOICE in
         LANGUAGE="en"
         MODEL_COUNT=46
         MODEL_SIZE="75 MB"
-        MODELS_FOLDER_ID="$MODELS_FOLDER_ID_USA"
-        MODELS_URL="$MODELS_URL_USA"
+        HF_SUBDIR="usa"
         ;;
     2)
         REGION="europe"
         LANGUAGE="nl"
         MODEL_COUNT=199
         MODEL_SIZE="7 GB"
-        MODELS_FOLDER_ID="$MODELS_FOLDER_ID_EUROPE"
-        MODELS_URL="$MODELS_URL_EUROPE"
+        HF_SUBDIR="europe"
         ;;
     3)
         REGION="europe"
         LANGUAGE="de"
         MODEL_COUNT=199
         MODEL_SIZE="7 GB"
-        MODELS_FOLDER_ID="$MODELS_FOLDER_ID_EUROPE"
-        MODELS_URL="$MODELS_URL_EUROPE"
+        HF_SUBDIR="europe"
         ;;
     4)
         REGION="europe"
         LANGUAGE="en"
         MODEL_COUNT=199
         MODEL_SIZE="7 GB"
-        MODELS_FOLDER_ID="$MODELS_FOLDER_ID_EUROPE"
-        MODELS_URL="$MODELS_URL_EUROPE"
+        HF_SUBDIR="europe"
         ;;
     *)
         echo -e "${RED}Invalid choice${NC}"
@@ -173,7 +180,6 @@ echo -e "${BLUE}[4/7] Setting up Python environment...${NC}"
 VENV_DIR="$INSTALL_DIR/venv"
 PYTHON_BIN="$VENV_DIR/bin/python3"
 PIP_BIN="$VENV_DIR/bin/pip3"
-GDOWN_BIN="$VENV_DIR/bin/gdown"
 
 if [ ! -d "$VENV_DIR" ]; then
     echo "Creating virtual environment..."
@@ -183,48 +189,56 @@ fi
 # Install packages in venv
 echo "Installing Python packages (this may take a few minutes)..."
 "$PIP_BIN" install --upgrade pip --quiet
-"$PIP_BIN" install torch librosa scikit-image numpy gdown --quiet
+"$PIP_BIN" install torch librosa scikit-image numpy huggingface_hub --quiet
 
-# Download models
-echo -e "${BLUE}[5/7] Downloading models ($MODEL_SIZE)...${NC}"
+# Download models from Hugging Face
+echo -e "${BLUE}[5/7] Downloading models from Hugging Face ($MODEL_SIZE)...${NC}"
 
 MODELS_DIR="$INSTALL_DIR/models"
 mkdir -p "$MODELS_DIR"
 
-echo "Downloading models from Google Drive..."
 if [ "$MODEL_SIZE" = "7 GB" ]; then
     echo -e "${YELLOW}Note: European models are ~7 GB. This may take 10-30 minutes...${NC}"
 fi
 
-# Use --remaining-ok to handle folders with >50 files
-# Run multiple times to get all files (gdown limitation)
-DOWNLOAD_ATTEMPTS=5
-for i in $(seq 1 $DOWNLOAD_ATTEMPTS); do
-    echo "Download pass $i of $DOWNLOAD_ATTEMPTS..."
-    "$GDOWN_BIN" --folder "$MODELS_FOLDER_ID" -O "$MODELS_DIR/" --remaining-ok 2>&1 | grep -v "^Processing\|^Retrieving\|^Downloading" || true
+echo "Downloading from huggingface.co/$HF_REPO..."
 
-    # Check if we have enough models
-    CURRENT_MODELS=$(find "$MODELS_DIR" -name "*.pt" 2>/dev/null | wc -l)
-    if [ "$CURRENT_MODELS" -ge "$MODEL_COUNT" ]; then
-        echo -e "${GREEN}Downloaded all $CURRENT_MODELS models${NC}"
-        break
-    fi
-    echo "Found $CURRENT_MODELS models so far..."
-done
+# Use huggingface_hub to download models
+"$PYTHON_BIN" << PYEOF
+from huggingface_hub import snapshot_download
+import os
 
-# Final check
-MODEL_FILES=$(find "$MODELS_DIR" -name "*.pt" 2>/dev/null | wc -l)
-if [ "$MODEL_FILES" -lt "$MODEL_COUNT" ]; then
-    echo -e "${YELLOW}Downloaded $MODEL_FILES of $MODEL_COUNT models.${NC}"
-    echo ""
-    echo "Some models may be missing. You can manually download from:"
-    echo -e "${BLUE}$MODELS_URL${NC}"
-    echo ""
-    echo "And place additional .pt files in: $MODELS_DIR/"
-    echo ""
-    if [ -t 0 ]; then
-        read -p "Press Enter to continue anyway..."
-    fi
+print("Starting download...")
+try:
+    snapshot_download(
+        repo_id="$HF_REPO",
+        repo_type="model",
+        local_dir="$MODELS_DIR",
+        allow_patterns=["$HF_SUBDIR/*.pt"],
+        local_dir_use_symlinks=False
+    )
+    print("Download complete!")
+except Exception as e:
+    print(f"Download error: {e}")
+    print("You can manually download from: https://huggingface.co/$HF_REPO")
+PYEOF
+
+# Move files from subdir to models dir and clean up
+if [ -d "$MODELS_DIR/$HF_SUBDIR" ]; then
+    mv "$MODELS_DIR/$HF_SUBDIR"/*.pt "$MODELS_DIR/" 2>/dev/null || true
+    rm -rf "$MODELS_DIR/$HF_SUBDIR"
+fi
+
+# Remove HF cache files
+rm -rf "$MODELS_DIR/.cache" "$MODELS_DIR/.huggingface" 2>/dev/null || true
+
+# Verify models
+MODEL_FILES=$(find "$MODELS_DIR" -maxdepth 1 -name "*.pt" 2>/dev/null | wc -l)
+if [ "$MODEL_FILES" -eq 0 ]; then
+    echo -e "${YELLOW}Warning: No models found. Service will start but won't classify.${NC}"
+    echo "Download models from: https://huggingface.co/$HF_REPO"
+else
+    echo -e "${GREEN}Downloaded $MODEL_FILES models${NC}"
 fi
 
 # Create data directory
@@ -279,22 +293,32 @@ sudo systemctl enable ${SERVICE_NAME}-viewer
 sudo systemctl start ${SERVICE_NAME}-viewer
 
 # Done!
+IP_ADDR=$(hostname -I | awk '{print $1}')
 echo ""
-echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗"
-echo -e "║              Installation Complete!                        ║"
-echo -e "╚════════════════════════════════════════════════════════════╝${NC}"
+echo -e "${GREEN}"
+echo "    ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫"
 echo ""
-echo "The vocalization classifier is now running!"
+echo "        ╔══════════════════════════════════════════╗"
+echo "        ║   ✓  Installation Complete!              ║"
+echo "        ╚══════════════════════════════════════════╝"
 echo ""
-echo -e "${GREEN}Web Viewer: http://$(hostname -I | awk '{print $1}'):8088${NC}"
+echo "    ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫"
+echo -e "${NC}"
 echo ""
-echo "Commands:"
-echo "  Status:   sudo systemctl status ${SERVICE_NAME}"
-echo "  Logs:     journalctl -u ${SERVICE_NAME} -f"
-echo "  Viewer:   sudo systemctl status ${SERVICE_NAME}-viewer"
+echo "  The vocalization classifier is now running!"
 echo ""
-echo "Data stored in: $INSTALL_DIR/data/vocalization.db"
-echo "Language: $LANGUAGE"
+echo -e "  ${GREEN}🌐 Web Viewer: http://${IP_ADDR}:8088${NC}"
 echo ""
-echo -e "${BLUE}Thank you for using BirdNET Vocalization!${NC}"
-echo "Report issues: https://github.com/RonnyCHL/birdnet-vocalization/issues"
+echo "  ┌─────────────────────────────────────────────────────────┐"
+echo "  │  Commands:                                              │"
+echo "  │    Status:  sudo systemctl status ${SERVICE_NAME}    │"
+echo "  │    Logs:    journalctl -u ${SERVICE_NAME} -f         │"
+echo "  └─────────────────────────────────────────────────────────┘"
+echo ""
+echo "  Language: $LANGUAGE"
+echo "  Models:   $MODEL_FILES species"
+echo "  Data:     $INSTALL_DIR/data/vocalization.db"
+echo ""
+echo -e "  ${BLUE}Thank you for using BirdNET Vocalization!${NC}"
+echo "  Report issues: https://github.com/RonnyCHL/birdnet-vocalization/issues"
+echo ""

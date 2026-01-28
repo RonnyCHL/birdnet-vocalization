@@ -112,7 +112,7 @@ The web viewer shows:
 
 ### North America (46 species, ~75 MB)
 
-[**Download models**](https://drive.google.com/drive/folders/1zJ-rR6FTEkGjVPt77VHRmuQLZGmoHnaD)
+[**Download models**](https://huggingface.co/RonnyCHL/birdnet-vocalization-models)
 
 Language: English (song/call/alarm)
 
@@ -120,7 +120,7 @@ American Robin, American Crow, American Goldfinch, Baltimore Oriole, Barn Swallo
 
 ### Europe (199 species, ~7 GB)
 
-[**Download models**](https://drive.google.com/drive/folders/1jtGWWTqWh4l0NmRZIHHAvzRTLjC0g--P)
+[**Download models**](https://huggingface.co/RonnyCHL/birdnet-vocalization-models)
 
 Languages available:
 - **Dutch/Nederlands**: zang/roep/alarm
@@ -323,7 +323,7 @@ De web viewer toont:
 
 ### Europa (199 soorten, ~7 GB)
 
-[**Download modellen**](https://drive.google.com/drive/folders/1jtGWWTqWh4l0NmRZIHHAvzRTLjC0g--P)
+[**Download modellen**](https://huggingface.co/RonnyCHL/birdnet-vocalization-models)
 
 Beschikbare talen:
 - **Nederlands**: zang/roep/alarm
@@ -334,7 +334,7 @@ Getraind met "ultimate" architectuur voor verbeterde nauwkeurigheid.
 
 ### Noord-Amerika (46 soorten, ~75 MB)
 
-[**Download modellen**](https://drive.google.com/drive/folders/1zJ-rR6FTEkGjVPt77VHRmuQLZGmoHnaD)
+[**Download modellen**](https://huggingface.co/RonnyCHL/birdnet-vocalization-models)
 
 Taal: Engels (song/call/alarm)
 
