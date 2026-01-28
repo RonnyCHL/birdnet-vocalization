@@ -61,13 +61,29 @@ When BirdNET-Pi detects a bird, this addon classifies the *type* of vocalization
 
 ## Quick Install
 
+**Interactive (recommended):**
 ```bash
-curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash
+bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh)
+```
+
+**Non-interactive (specify region directly):**
+```bash
+# North America - English
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 1
+
+# Europe - Dutch
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 2
+
+# Europe - German
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 3
+
+# Europe - English
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 4
 ```
 
 The installer will:
 1. Find your BirdNET-Pi installation
-2. Ask for your region and language
+2. Ask for your region and language (if not specified)
 3. Download the appropriate models
 4. Set up the classification service
 5. Set up the web viewer
@@ -256,13 +272,29 @@ Wanneer BirdNET-Pi een vogel detecteert, classificeert deze addon het *type* voc
 
 ## Snelle Installatie
 
+**Interactief (aanbevolen):**
 ```bash
-curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash
+bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh)
+```
+
+**Non-interactief (regio direct specificeren):**
+```bash
+# Europa - Nederlands
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 2
+
+# Europa - Duits
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 3
+
+# Europa - Engels
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 4
+
+# Noord-Amerika - Engels
+curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 1
 ```
 
 De installer zal:
 1. Je BirdNET-Pi installatie vinden
-2. Vragen naar je regio en taal
+2. Vragen naar je regio en taal (indien niet opgegeven)
 3. De juiste modellen downloaden
 4. De classificatie service instellen
 5. De web viewer instellen

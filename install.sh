@@ -4,11 +4,31 @@
 #
 # Adds vocalization classification (song/call/alarm) to your BirdNET-Pi
 #
-# Usage:
-#   curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/main/install.sh | bash
+# Usage (interactive):
+#   bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh)
+#
+# Usage (non-interactive):
+#   curl -sSL ... | bash -s -- --region 1   # North America - English
+#   curl -sSL ... | bash -s -- --region 2   # Europe - Dutch
+#   curl -sSL ... | bash -s -- --region 3   # Europe - German
+#   curl -sSL ... | bash -s -- --region 4   # Europe - English
 #
 
 set -e
+
+# Parse command line arguments
+REGION_CHOICE=""
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --region)
+            REGION_CHOICE="$2"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
 
 # Colors
 RED='\033[0;31m'
@@ -71,7 +91,27 @@ echo "  2) Europe - Dutch/Nederlands (199 species, ~7 GB)"
 echo "  3) Europe - German/Deutsch (199 species, ~7 GB)"
 echo "  4) Europe - English (199 species, ~7 GB)"
 echo ""
-read -p "Enter choice [1-4]: " REGION_CHOICE
+
+# If not provided via argument, ask interactively
+if [ -z "$REGION_CHOICE" ]; then
+    # Check if stdin is a terminal
+    if [ -t 0 ]; then
+        read -p "Enter choice [1-4]: " REGION_CHOICE
+    else
+        echo -e "${RED}Error: No region specified and not running interactively.${NC}"
+        echo ""
+        echo "Use one of these methods:"
+        echo ""
+        echo "  Interactive (recommended):"
+        echo "    bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh)"
+        echo ""
+        echo "  Non-interactive:"
+        echo "    curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 1"
+        echo ""
+        echo "  Regions: 1=USA-English, 2=Europe-Dutch, 3=Europe-German, 4=Europe-English"
+        exit 1
+    fi
+fi
 
 case $REGION_CHOICE in
     1)
