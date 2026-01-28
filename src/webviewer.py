@@ -11,9 +11,10 @@ Usage:
 
 import argparse
 import json
+import os
 import sqlite3
 from datetime import datetime
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -21,7 +22,7 @@ DEFAULT_PORT = 8088
 DEFAULT_DATA_DIR = Path("/opt/birdnet-vocalization/data")
 
 
-class VocalizationHandler(SimpleHTTPRequestHandler):
+class VocalizationHandler(BaseHTTPRequestHandler):
     """HTTP handler for vocalization viewer."""
 
     data_dir = DEFAULT_DATA_DIR
