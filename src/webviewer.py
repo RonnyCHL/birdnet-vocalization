@@ -417,9 +417,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
-        // Chart.js loaded above, now define functions
+        // Define all functions first, load Chart.js asynchronously
         let updateInfo = null;
         let timeChart = null;
         let speciesChart = null;
@@ -684,17 +683,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                 loadStats();
                 loadData();
 
-                // Load charts only if Chart.js is available
-                if (typeof Chart !== 'undefined') {
-                    console.log('Chart.js loaded successfully');
-                    loadCharts();
-                    setInterval(loadCharts, 60000);
-                } else {
-                    console.log('Chart.js not available - charts disabled');
-                    document.querySelectorAll('.chart-card').forEach(function(el) {
-                        el.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 50px;">Charts unavailable</p>';
-                    });
-                }
+                // Chart.js loads asynchronously after init
+                // Charts will be loaded when Chart.js script completes
 
                 // Periodic refresh
                 setInterval(loadData, 30000);
@@ -705,8 +695,25 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             }
         }
 
-        // Initialize immediately - Chart.js already loaded above
+        // Initialize immediately, then load Chart.js async
         init();
+
+        // Load Chart.js asynchronously after page init
+        (function() {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+            script.onload = function() {
+                console.log('Chart.js loaded async');
+                if (typeof loadCharts === 'function') {
+                    loadCharts();
+                    setInterval(loadCharts, 60000);
+                }
+            };
+            script.onerror = function() {
+                console.log('Chart.js failed to load');
+            };
+            document.body.appendChild(script);
+        })();
     </script>
 </body>
 </html>"""
