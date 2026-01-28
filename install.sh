@@ -164,11 +164,22 @@ echo -e "${GREEN}Selected: $REGION - $LANGUAGE ($MODEL_COUNT species, $MODEL_SIZ
 # Clone repository first (we need the directory for venv)
 echo -e "${BLUE}[3/7] Downloading vocalization classifier...${NC}"
 
-if [ -d "$INSTALL_DIR" ]; then
+if [ -d "$INSTALL_DIR/.git" ]; then
+    # Valid git repo exists - update it
     echo "Updating existing installation..."
     cd "$INSTALL_DIR"
-    git pull || true
+    git fetch origin
+    git reset --hard origin/master
+elif [ -d "$INSTALL_DIR" ]; then
+    # Directory exists but no .git (e.g., after failed uninstall)
+    echo "Repairing installation (missing git repo)..."
+    cd "$INSTALL_DIR"
+    git init
+    git remote add origin "$REPO_URL"
+    git fetch origin
+    git reset --hard origin/master
 else
+    # Fresh install
     sudo mkdir -p "$INSTALL_DIR"
     sudo chown $USER:$USER "$INSTALL_DIR"
     git clone "$REPO_URL" "$INSTALL_DIR"
