@@ -418,13 +418,13 @@ class VocalizationHandler(BaseHTTPRequestHandler):
     </div>
 
     <script>
-        // Define all functions first, load Chart.js asynchronously
-        let updateInfo = null;
-        let timeChart = null;
-        let speciesChart = null;
-        let initialized = false;
+        // All code in global scope for onclick handlers
+        var updateInfo = null;
+        var timeChart = null;
+        var speciesChart = null;
+        var initialized = false;
 
-        // Theme management
+        // Theme management - must be global for onclick
         function toggleTheme() {
             const body = document.body;
             const btn = document.getElementById('theme-toggle');
@@ -667,10 +667,6 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             player.classList.remove('visible');
         }
 
-        // Event listeners
-        document.getElementById('filter-type').addEventListener('change', loadData);
-        document.getElementById('filter-species').addEventListener('input', loadData);
-
         // Initialize after page load
         function init() {
             if (initialized) return;
@@ -678,6 +674,11 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
             try {
                 console.log('BirdNET Vocalization Viewer initializing...');
+
+                // Event listeners
+                document.getElementById('filter-type').addEventListener('change', loadData);
+                document.getElementById('filter-species').addEventListener('input', loadData);
+
                 initTheme();
                 checkUpdate();
                 loadStats();
@@ -695,25 +696,24 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             }
         }
 
-        // Initialize immediately, then load Chart.js async
-        init();
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
 
-        // Load Chart.js asynchronously after page init
-        (function() {
-            var script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
-            script.onload = function() {
-                console.log('Chart.js loaded async');
-                if (typeof loadCharts === 'function') {
-                    loadCharts();
-                    setInterval(loadCharts, 60000);
-                }
-            };
-            script.onerror = function() {
-                console.log('Chart.js failed to load');
-            };
-            document.body.appendChild(script);
-        })();
+        // Load Chart.js asynchronously
+        var chartScript = document.createElement('script');
+        chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+        chartScript.onload = function() {
+            console.log('Chart.js loaded');
+            if (typeof loadCharts === 'function' && typeof Chart !== 'undefined') {
+                loadCharts();
+                setInterval(loadCharts, 60000);
+            }
+        };
+        document.head.appendChild(chartScript);
     </script>
 </body>
 </html>"""
