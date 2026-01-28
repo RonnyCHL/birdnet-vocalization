@@ -68,7 +68,6 @@ class VocalizationHandler(BaseHTTPRequestHandler):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BirdNET Vocalization Viewer</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-primary: #1a1a2e;
@@ -708,6 +707,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         // Initialize immediately - call init directly
         init();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </body>
 </html>"""
         self.send_response(200)
