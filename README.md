@@ -61,12 +61,28 @@ When BirdNET-Pi detects a bird, this addon classifies the *type* of vocalization
 
 ## Quick Install
 
-**Interactive (recommended):**
+### Option 1: Interactive Install (recommended)
+
+This downloads the script first, then runs it - allowing you to select your region from the menu:
+
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh)
 ```
 
-**Non-interactive (specify region directly):**
+You will see a menu:
+```
+  1) North America - English (46 species, ~75 MB)
+  2) Europe - Dutch/Nederlands (199 species, ~7 GB)
+  3) Europe - German/Deutsch (199 species, ~7 GB)
+  4) Europe - English (199 species, ~7 GB)
+
+Enter choice [1-4]:
+```
+
+### Option 2: Non-interactive Install
+
+If you know which region you want, you can specify it directly. Note the `bash -s -- --region X` syntax:
+
 ```bash
 # North America - English
 curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 1
@@ -81,14 +97,58 @@ curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master
 curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 4
 ```
 
-The installer will:
+> **Note:** Piping directly to bash (`curl ... | bash`) without `--region` will NOT work interactively. Use the `bash <(curl ...)` syntax for interactive installs.
+
+### What the installer does
 1. Find your BirdNET-Pi installation
 2. Ask for your region and language (if not specified)
-3. Download the appropriate models
+3. Download the appropriate models (~75 MB for USA, ~7 GB for Europe)
 4. Set up the classification service
 5. Set up the web viewer
 
 That's it! Classification starts automatically.
+
+---
+
+## Troubleshooting
+
+### "Error: No region specified and not running interactively"
+
+This happens when you pipe directly to bash without specifying a region:
+```bash
+# This will NOT work:
+curl -sSL .../install.sh | bash
+```
+
+**Solution:** Use one of these methods:
+
+1. **Interactive (recommended):**
+   ```bash
+   bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh)
+   ```
+
+2. **Non-interactive with region:**
+   ```bash
+   curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 2
+   ```
+
+### 404 Error when downloading
+
+Make sure you're using the correct URL. The install script is at:
+```
+https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh
+```
+
+### Service not starting
+
+Check the logs:
+```bash
+journalctl -u birdnet-vocalization -e
+```
+
+Common issues:
+- BirdNET-Pi not found: Specify path with `--birdnet-dir`
+- Models not downloaded: Check `/opt/birdnet-vocalization/models/`
 
 ---
 
@@ -272,12 +332,28 @@ Wanneer BirdNET-Pi een vogel detecteert, classificeert deze addon het *type* voc
 
 ## Snelle Installatie
 
-**Interactief (aanbevolen):**
+### Optie 1: Interactieve Installatie (aanbevolen)
+
+Dit downloadt het script eerst, dan voert het uit - zodat je je regio kunt kiezen:
+
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh)
 ```
 
-**Non-interactief (regio direct specificeren):**
+Je ziet dan een menu:
+```
+  1) North America - English (46 species, ~75 MB)
+  2) Europe - Dutch/Nederlands (199 species, ~7 GB)
+  3) Europe - German/Deutsch (199 species, ~7 GB)
+  4) Europe - English (199 species, ~7 GB)
+
+Enter choice [1-4]:
+```
+
+### Optie 2: Non-interactieve Installatie
+
+Als je al weet welke regio je wilt, kun je het direct specificeren. Let op de `bash -s -- --region X` syntax:
+
 ```bash
 # Europa - Nederlands
 curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 2
@@ -292,14 +368,58 @@ curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master
 curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 1
 ```
 
-De installer zal:
+> **Let op:** Direct pipen naar bash (`curl ... | bash`) zonder `--region` werkt NIET interactief. Gebruik de `bash <(curl ...)` syntax voor interactieve installaties.
+
+### Wat de installer doet
 1. Je BirdNET-Pi installatie vinden
 2. Vragen naar je regio en taal (indien niet opgegeven)
-3. De juiste modellen downloaden
+3. De juiste modellen downloaden (~75 MB voor USA, ~7 GB voor Europa)
 4. De classificatie service instellen
 5. De web viewer instellen
 
 Klaar! Classificatie start automatisch.
+
+---
+
+## Problemen Oplossen
+
+### "Error: No region specified and not running interactively"
+
+Dit gebeurt als je direct naar bash piped zonder regio:
+```bash
+# Dit werkt NIET:
+curl -sSL .../install.sh | bash
+```
+
+**Oplossing:** Gebruik een van deze methodes:
+
+1. **Interactief (aanbevolen):**
+   ```bash
+   bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh)
+   ```
+
+2. **Non-interactief met regio:**
+   ```bash
+   curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 2
+   ```
+
+### 404 Error bij downloaden
+
+Zorg dat je de juiste URL gebruikt. Het install script staat op:
+```
+https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh
+```
+
+### Service start niet
+
+Check de logs:
+```bash
+journalctl -u birdnet-vocalization -e
+```
+
+Veelvoorkomende problemen:
+- BirdNET-Pi niet gevonden: Specificeer pad met `--birdnet-dir`
+- Modellen niet gedownload: Check `/opt/birdnet-vocalization/models/`
 
 ---
 
@@ -420,6 +540,3 @@ Tot die tijd biedt deze addon een veilige, niet-invasieve manier om vocalisatie 
 ## Licentie
 
 MIT License - vrij te gebruiken, aan te passen en te verspreiden.
-# Test update notification
-
-# Test update 21:28
