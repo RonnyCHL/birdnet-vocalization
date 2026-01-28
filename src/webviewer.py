@@ -68,7 +68,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BirdNET Vocalization Viewer</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer onerror="console.error('Chart.js failed to load')"></script>
     <style>
         :root {
             --bg-primary: #1a1a2e;
@@ -677,26 +677,31 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             if (initialized) return;
             initialized = true;
             console.log('BirdNET Vocalization Viewer initializing...');
-            console.log('Chart.js loaded:', typeof Chart !== 'undefined');
             initTheme();
             checkUpdate();
             loadStats();
-            loadCharts();
             loadData();
+
+            // Load charts only if Chart.js is available
+            if (typeof Chart !== 'undefined') {
+                console.log('Chart.js loaded successfully');
+                loadCharts();
+                setInterval(loadCharts, 60000);
+            } else {
+                console.log('Chart.js not available - charts disabled');
+                document.querySelectorAll('.chart-card').forEach(el => {
+                    el.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 50px;">Charts unavailable</p>';
+                });
+            }
 
             // Periodic refresh
             setInterval(loadData, 30000);
             setInterval(loadStats, 60000);
-            setInterval(loadCharts, 60000);
             setInterval(checkUpdate, 300000);
         }
 
-        // Wait for DOM and Chart.js
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
-        }
+        // Wait for window load (ensures all scripts including deferred ones are loaded)
+        window.addEventListener('load', init);
     </script>
 </body>
 </html>"""
