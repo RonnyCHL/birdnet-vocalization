@@ -98,9 +98,9 @@ echo -e "${GREEN}Found BirdNET-Pi at: $BIRDNET_DIR${NC}"
 echo -e "${BLUE}[2/7] Select your region...${NC}"
 echo ""
 echo "  1) North America - English (46 species, ~75 MB)"
-echo "  2) Europe - Dutch/Nederlands (199 species, ~7 GB)"
-echo "  3) Europe - German/Deutsch (199 species, ~7 GB)"
-echo "  4) Europe - English (199 species, ~7 GB)"
+echo "  2) Europe - Dutch/Nederlands (195 species, ~7 GB)"
+echo "  3) Europe - German/Deutsch (195 species, ~7 GB)"
+echo "  4) Europe - English (195 species, ~7 GB)"
 echo ""
 
 # If not provided via argument, ask interactively
@@ -135,23 +135,23 @@ case $REGION_CHOICE in
     2)
         REGION="europe"
         LANGUAGE="nl"
-        MODEL_COUNT=199
+        MODEL_COUNT=195
         MODEL_SIZE="7 GB"
-        HF_SUBDIR="europe"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
         ;;
     3)
         REGION="europe"
         LANGUAGE="de"
-        MODEL_COUNT=199
+        MODEL_COUNT=195
         MODEL_SIZE="7 GB"
-        HF_SUBDIR="europe"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
         ;;
     4)
         REGION="europe"
         LANGUAGE="en"
-        MODEL_COUNT=199
+        MODEL_COUNT=195
         MODEL_SIZE="7 GB"
-        HF_SUBDIR="europe"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
         ;;
     *)
         echo -e "${RED}Invalid choice${NC}"
