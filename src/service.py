@@ -129,7 +129,11 @@ class VocalizationService:
         conn.close()
 
     def _get_new_detections(self) -> list[dict]:
-        """Get new detections from BirdNET-Pi database."""
+        """Get new detections from BirdNET-Pi database.
+
+        Uses Sci_Name (scientific name) for model matching since it's universal
+        across all BirdNET-Pi language settings.
+        """
         if not self.birdnet_db.exists():
             logger.warning(f"BirdNET-Pi database not found: {self.birdnet_db}")
             return []
@@ -138,6 +142,8 @@ class VocalizationService:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
+        # Sci_Name is the scientific name (e.g., "Turdus merula")
+        # Com_Name is the display name in user's language (e.g., "Merel", "Blackbird", "Koltrast")
         cursor.execute("""
             SELECT rowid, Date, Time, Sci_Name, Com_Name, Confidence, File_Name
             FROM detections
@@ -213,10 +219,13 @@ class VocalizationService:
 
         for detection in detections:
             rowid = detection['rowid']
-            species = detection.get('Com_Name', '')
+            # Use scientific name for model matching (universal across languages)
+            scientific_name = detection.get('Sci_Name', '')
+            # Common name for display (in user's language)
+            common_name = detection.get('Com_Name', '')
 
-            # Check if we have a model for this species
-            if not self.classifier.has_model(species):
+            # Check if we have a model for this species (by scientific name)
+            if not self.classifier.has_model(scientific_name):
                 self.last_processed_id = rowid
                 processed += 1
                 continue
@@ -224,19 +233,19 @@ class VocalizationService:
             # Find audio file
             audio_path = self._find_audio_file(detection)
             if not audio_path:
-                logger.debug(f"Audio not found for {species}: {detection.get('File_Name')}")
+                logger.debug(f"Audio not found for {common_name} ({scientific_name}): {detection.get('File_Name')}")
                 self.last_processed_id = rowid
                 processed += 1
                 continue
 
-            # Classify
-            result = self.classifier.classify(species, audio_path)
+            # Classify using scientific name
+            result = self.classifier.classify(scientific_name, audio_path)
 
             if result and result['confidence'] >= MIN_CONFIDENCE:
                 self._store_result(detection, result)
                 classified += 1
                 logger.info(
-                    f"{species}: {result['type_display']} ({result['confidence']:.0%})"
+                    f"{common_name} ({scientific_name}): {result['type_display']} ({result['confidence']:.0%})"
                 )
 
             self.last_processed_id = rowid

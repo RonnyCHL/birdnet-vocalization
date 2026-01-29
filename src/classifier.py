@@ -149,17 +149,26 @@ class VocalizationClassifier:
         self._initialized = True
 
     def _scan_models(self):
-        """Scan available models."""
+        """Scan available models.
+
+        Models are named by scientific name (e.g., Turdus_merula.pt).
+        This makes them work with any BirdNET-Pi language setting.
+        """
         if not self.models_dir.exists():
             logger.warning(f"Models directory not found: {self.models_dir}")
             return
 
         for model_file in self.models_dir.glob("*.pt"):
             name = model_file.stem
-            # Format: species_name_cnn_v1.pt
+            # New format: Scientific_name.pt (e.g., Turdus_merula.pt)
+            # Old format: species_name_cnn_v1.pt (deprecated)
+
+            # Remove any _cnn_v1 suffix (for backwards compatibility)
             species_name = re.sub(r'_cnn_v\d+$', '', name)
-            species_name = species_name.replace('_', ' ').title()
-            key = species_name.lower()
+
+            # Store by scientific name (normalized: lowercase, spaces)
+            # e.g., "Turdus_merula" -> "turdus merula"
+            key = species_name.replace('_', ' ').lower()
             self.available_models[key] = model_file
 
         logger.info(f"Vocalization classifier: {len(self.available_models)} models loaded")
@@ -262,18 +271,19 @@ class VocalizationClassifier:
         self._init_lazy()
         return [name.title() for name in self.available_models.keys()]
 
-    def classify(self, species_name: str, audio_path: str | Path) -> dict | None:
+    def classify(self, scientific_name: str, audio_path: str | Path) -> dict | None:
         """
         Classify vocalization type.
 
         Args:
-            species_name: Species common name (e.g., "American Robin")
+            scientific_name: Species scientific name (e.g., "Turdus merula")
+                           Works with any format: "Turdus merula", "Turdus_merula", "turdus merula"
             audio_path: Path to audio file (MP3 or WAV)
 
         Returns:
             Dict with type, confidence, probabilities, or None if not possible
         """
-        model_path = self._find_model(species_name)
+        model_path = self._find_model(scientific_name)
         if not model_path:
             return None
 
