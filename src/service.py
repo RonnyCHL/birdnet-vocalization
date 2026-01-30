@@ -226,17 +226,22 @@ class VocalizationService:
 
             # Check if we have a model for this species (by scientific name)
             if not self.classifier.has_model(scientific_name):
+                logger.warning(f"No model for: {scientific_name} ({common_name})")
                 self.last_processed_id = rowid
                 processed += 1
                 continue
 
+            logger.debug(f"Model found for: {scientific_name}")
+
             # Find audio file
             audio_path = self._find_audio_file(detection)
             if not audio_path:
-                logger.debug(f"Audio not found for {common_name} ({scientific_name}): {detection.get('File_Name')}")
+                logger.warning(f"Audio not found for {common_name} ({scientific_name}): {detection.get('File_Name')}")
                 self.last_processed_id = rowid
                 processed += 1
                 continue
+
+            logger.debug(f"Found audio: {audio_path}")
 
             # Classify using scientific name
             result = self.classifier.classify(scientific_name, audio_path)

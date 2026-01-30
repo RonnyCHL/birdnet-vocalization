@@ -185,14 +185,19 @@ class VocalizationClassifier:
         self._init_lazy()
         normalized = self._normalize_name(species_name)
 
+        logger.debug(f"Looking for model: '{species_name}' -> normalized: '{normalized}'")
+
         if normalized in self.available_models:
+            logger.debug(f"Exact match found for '{normalized}'")
             return self.available_models[normalized]
 
         # Fuzzy match
         for key in self.available_models:
             if key in normalized or normalized in key:
+                logger.debug(f"Fuzzy match: '{normalized}' matched '{key}'")
                 return self.available_models[key]
 
+        logger.debug(f"No model found for '{normalized}'. Available models sample: {list(self.available_models.keys())[:5]}")
         return None
 
     def _load_model(self, model_path: Path):
