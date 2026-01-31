@@ -67,7 +67,82 @@ TRANSLATIONS = {
         'song': 'Gesang',
         'call': 'Ruf',
         'alarm': 'Alarm'
-    }
+    },
+    'sv': {
+        'song': 'sång',
+        'call': 'läte',
+        'alarm': 'varningsläte'
+    },
+    'no': {
+        'song': 'sang',
+        'call': 'kall',
+        'alarm': 'alarm'
+    },
+    'da': {
+        'song': 'sang',
+        'call': 'kald',
+        'alarm': 'alarm'
+    },
+    'fi': {
+        'song': 'laulu',
+        'call': 'kutsu',
+        'alarm': 'hälytys'
+    },
+    'fr': {
+        'song': 'chant',
+        'call': 'cri',
+        'alarm': 'alarme'
+    },
+    'es': {
+        'song': 'canto',
+        'call': 'reclamo',
+        'alarm': 'alarma'
+    },
+    'it': {
+        'song': 'canto',
+        'call': 'richiamo',
+        'alarm': 'allarme'
+    },
+    'pl': {
+        'song': 'śpiew',
+        'call': 'głos',
+        'alarm': 'alarm'
+    },
+    'pt': {
+        'song': 'canto',
+        'call': 'chamado',
+        'alarm': 'alarme'
+    },
+    'cs': {
+        'song': 'zpěv',
+        'call': 'hlas',
+        'alarm': 'poplach'
+    },
+    'hu': {
+        'song': 'ének',
+        'call': 'hívás',
+        'alarm': 'riasztás'
+    },
+    'ro': {
+        'song': 'cântec',
+        'call': 'strigăt',
+        'alarm': 'alarmă'
+    },
+    'sk': {
+        'song': 'spev',
+        'call': 'hlas',
+        'alarm': 'poplach'
+    },
+    'uk': {
+        'song': 'спів',
+        'call': 'поклик',
+        'alarm': 'тривога'
+    },
+    'ru': {
+        'song': 'пение',
+        'call': 'позыв',
+        'alarm': 'тревога'
+    },
 }
 
 logger = logging.getLogger(__name__)

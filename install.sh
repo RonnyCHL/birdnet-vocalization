@@ -95,19 +95,36 @@ fi
 echo -e "${GREEN}Found BirdNET-Pi at: $BIRDNET_DIR${NC}"
 
 # Select region
-echo -e "${BLUE}[2/7] Select your region...${NC}"
+echo -e "${BLUE}[2/7] Select your region and language...${NC}"
 echo ""
 echo "  1) North America - English (46 species, ~75 MB)"
-echo "  2) Europe - Dutch/Nederlands (219 species, ~8 GB)"
-echo "  3) Europe - German/Deutsch (219 species, ~8 GB)"
-echo "  4) Europe - English (219 species, ~8 GB)"
+echo ""
+echo "  Europe (219 species, ~8 GB):"
+echo "  2) Dutch/Nederlands      (zang/roep/alarm)"
+echo "  3) German/Deutsch        (Gesang/Ruf/Alarm)"
+echo "  4) English               (song/call/alarm)"
+echo "  5) Swedish/Svenska       (sång/läte/varningsläte)"
+echo "  6) Norwegian/Norsk       (sang/kall/alarm)"
+echo "  7) Danish/Dansk          (sang/kald/alarm)"
+echo "  8) Finnish/Suomi         (laulu/kutsu/hälytys)"
+echo "  9) French/Français       (chant/cri/alarme)"
+echo " 10) Spanish/Español       (canto/reclamo/alarma)"
+echo " 11) Italian/Italiano      (canto/richiamo/allarme)"
+echo " 12) Polish/Polski         (śpiew/głos/alarm)"
+echo " 13) Portuguese/Português  (canto/chamado/alarme)"
+echo " 14) Czech/Čeština         (zpěv/hlas/poplach)"
+echo " 15) Hungarian/Magyar      (ének/hívás/riasztás)"
+echo " 16) Romanian/Română       (cântec/strigăt/alarmă)"
+echo " 17) Slovak/Slovenčina     (spev/hlas/poplach)"
+echo " 18) Ukrainian/Українська  (спів/поклик/тривога)"
+echo " 19) Russian/Русский       (пение/позыв/тревога)"
 echo ""
 
 # If not provided via argument, ask interactively
 if [ -z "$REGION_CHOICE" ]; then
     # Check if stdin is a terminal
     if [ -t 0 ]; then
-        read -p "Enter choice [1-4]: " REGION_CHOICE
+        read -p "Enter choice [1-19]: " REGION_CHOICE
     else
         echo -e "${RED}Error: No region specified and not running interactively.${NC}"
         echo ""
@@ -119,7 +136,7 @@ if [ -z "$REGION_CHOICE" ]; then
         echo "  Non-interactive:"
         echo "    curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/install.sh | bash -s -- --region 1"
         echo ""
-        echo "  Regions: 1=USA-English, 2=Europe-Dutch, 3=Europe-German, 4=Europe-English"
+        echo "  Regions: 1=USA, 2=NL, 3=DE, 4=EN, 5=SV, 6=NO, 7=DA, 8=FI, 9=FR, 10=ES, 11=IT, 12=PL, 13=PT, 14=CS, 15=HU, 16=RO, 17=SK, 18=UK, 19=RU"
         exit 1
     fi
 fi
@@ -149,6 +166,111 @@ case $REGION_CHOICE in
     4)
         REGION="europe"
         LANGUAGE="en"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    5)
+        REGION="europe"
+        LANGUAGE="sv"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    6)
+        REGION="europe"
+        LANGUAGE="no"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    7)
+        REGION="europe"
+        LANGUAGE="da"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    8)
+        REGION="europe"
+        LANGUAGE="fi"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    9)
+        REGION="europe"
+        LANGUAGE="fr"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    10)
+        REGION="europe"
+        LANGUAGE="es"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    11)
+        REGION="europe"
+        LANGUAGE="it"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    12)
+        REGION="europe"
+        LANGUAGE="pl"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    13)
+        REGION="europe"
+        LANGUAGE="pt"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    14)
+        REGION="europe"
+        LANGUAGE="cs"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    15)
+        REGION="europe"
+        LANGUAGE="hu"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    16)
+        REGION="europe"
+        LANGUAGE="ro"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    17)
+        REGION="europe"
+        LANGUAGE="sk"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    18)
+        REGION="europe"
+        LANGUAGE="uk"
+        MODEL_COUNT=219
+        MODEL_SIZE="8 GB"
+        HF_SUBDIR="getrainde_modellen_EMSN_scientific"
+        ;;
+    19)
+        REGION="europe"
+        LANGUAGE="ru"
         MODEL_COUNT=219
         MODEL_SIZE="8 GB"
         HF_SUBDIR="getrainde_modellen_EMSN_scientific"

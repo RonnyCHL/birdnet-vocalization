@@ -355,8 +355,8 @@ def main():
         "--language",
         type=str,
         default="en",
-        choices=["en", "nl", "de"],
-        help="Language for vocalization types: en (song/call/alarm), nl (zang/roep/alarm), de (Gesang/Ruf/Alarm)"
+        choices=["en", "nl", "de", "sv", "no", "da", "fi", "fr", "es", "it", "pl", "pt", "cs", "hu", "ro", "sk", "uk", "ru"],
+        help="Language for vocalization types (en, nl, de, sv, no, da, fi, fr, es, it, pl, pt, cs, hu, ro, sk, uk, ru)"
     )
 
     args = parser.parse_args()
