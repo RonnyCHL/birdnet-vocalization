@@ -160,11 +160,20 @@ After installation, view your results at:
 http://<your-pi-ip>:8088
 ```
 
-The web viewer shows:
-- Real-time classification results
-- Statistics (total songs, calls, alarms)
+### Overview Tab
+- Real-time classification results with audio playback
+- Statistics (total songs, calls, alarms, model coverage)
+- Charts: vocalizations over time, top 10 species
 - Filter by species or vocalization type
-- Auto-refresh every 30 seconds
+- **Feedback buttons** (👍/👎) to rate classification accuracy
+
+### Behavior Insights Tab
+- **Weekly trends**: Compare song/call/alarm counts vs last week
+- **Alerts**: Automatic detection of unusual patterns
+  - Alarm spikes (300%+ increase in 24h)
+  - Unusual silence (normally active species not heard)
+- **Hourly activity**: When are birds most active? (dawn chorus visible!)
+- **Species breakdown**: % song/call/alarm per species (top 15)
 
 ---
 
@@ -265,9 +274,13 @@ Until then, this addon provides a safe, non-invasive way to add vocalization cla
 
 ## Contributing
 
-- Report issues: [GitHub Issues](https://github.com/RonnyCHL/birdnet-vocalization/issues)
-- Request species: Open an issue with the species name
-- Training code: See [emsn-vocalization](https://github.com/RonnyCHL/emsn-vocalization)
+We welcome contributions! Use the issue templates for:
+
+- **🐛 Bug Report**: Something not working? [Report it](https://github.com/RonnyCHL/birdnet-vocalization/issues/new?template=bug_report.yml)
+- **🐦 Species Request**: Want a new bird species? [Request it](https://github.com/RonnyCHL/birdnet-vocalization/issues/new?template=species_request.yml)
+- **📊 Model Feedback**: Classification wrong? [Let us know](https://github.com/RonnyCHL/birdnet-vocalization/issues/new?template=model_feedback.yml)
+
+Training code: See [emsn-vocalization](https://github.com/RonnyCHL/emsn-vocalization)
 
 ## Credits
 
@@ -438,11 +451,20 @@ Na installatie, bekijk je resultaten op:
 http://<je-pi-ip>:8088
 ```
 
-De web viewer toont:
-- Real-time classificatie resultaten
-- Statistieken (totaal zang, roep, alarm)
+### Overzicht Tab
+- Real-time classificatie resultaten met audio afspelen
+- Statistieken (totaal zang, roep, alarm, model dekking)
+- Grafieken: vocalisaties over tijd, top 10 soorten
 - Filter op soort of vocalisatie type
-- Auto-refresh elke 30 seconden
+- **Feedback knoppen** (👍/👎) om classificatie nauwkeurigheid te beoordelen
+
+### Gedragsinzichten Tab
+- **Wekelijkse trends**: Vergelijk zang/roep/alarm met vorige week
+- **Alerts**: Automatische detectie van ongewone patronen
+  - Alarm pieken (300%+ toename in 24u)
+  - Ongebruikelijke stilte (normaal actieve soort niet gehoord)
+- **Activiteit per uur**: Wanneer zijn vogels het meest actief? (ochtendkoor zichtbaar!)
+- **Soort breakdown**: % zang/roep/alarm per soort (top 15)
 
 ---
 
@@ -541,9 +563,13 @@ Tot die tijd biedt deze addon een veilige, niet-invasieve manier om vocalisatie 
 
 ## Bijdragen
 
-- Meld problemen: [GitHub Issues](https://github.com/RonnyCHL/birdnet-vocalization/issues)
-- Vraag soorten aan: Open een issue met de soortnaam
-- Training code: Zie [emsn-vocalization](https://github.com/RonnyCHL/emsn-vocalization)
+We verwelkomen bijdragen! Gebruik de issue templates voor:
+
+- **🐛 Bug Melding**: Iets werkt niet? [Meld het](https://github.com/RonnyCHL/birdnet-vocalization/issues/new?template=bug_report.yml)
+- **🐦 Soort Aanvraag**: Wil je een nieuwe vogelsoort? [Vraag het aan](https://github.com/RonnyCHL/birdnet-vocalization/issues/new?template=species_request.yml)
+- **📊 Model Feedback**: Classificatie fout? [Laat het weten](https://github.com/RonnyCHL/birdnet-vocalization/issues/new?template=model_feedback.yml)
+
+Training code: Zie [emsn-vocalization](https://github.com/RonnyCHL/emsn-vocalization)
 
 ## Credits
 
