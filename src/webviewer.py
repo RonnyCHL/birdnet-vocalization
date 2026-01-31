@@ -57,6 +57,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
         if parsed.path == "/api/update/apply":
             self.apply_update()
+        elif parsed.path == "/api/feedback":
+            self.save_feedback()
         else:
             self.send_error(404, "Not Found")
 
@@ -257,6 +259,21 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         .play-btn:hover { background: var(--accent-hover); }
         .play-btn:disabled { background: var(--text-secondary); cursor: not-allowed; }
         .empty { text-align: center; padding: 50px; color: var(--text-secondary); }
+        .feedback-btns { display: flex; gap: 5px; }
+        .feedback-btn {
+            background: var(--bg-tertiary);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.2s;
+        }
+        .feedback-btn:hover { transform: scale(1.1); }
+        .feedback-btn.correct { background: var(--accent); }
+        .feedback-btn.incorrect { background: var(--danger); }
+        .feedback-btn.selected { opacity: 1; transform: scale(1.2); }
+        .feedback-btn.faded { opacity: 0.3; }
 
         /* Audio player */
         .audio-player {
@@ -393,6 +410,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                     <th>Type</th>
                     <th>Confidence</th>
                     <th>Audio</th>
+                    <th>Feedback</th>
                 </tr>
             </thead>
             <tbody id="results"></tbody>
@@ -631,7 +649,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                 const tbody = document.getElementById('results');
 
                 if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="empty">No vocalizations yet. Waiting for BirdNET-Pi detections...</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty">No vocalizations yet. Waiting for BirdNET-Pi detections...</td></tr>';
                     return;
                 }
 
@@ -642,10 +660,42 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                         <td class="type-${row.vocalization_type}">${(row.vocalization_type_display || row.vocalization_type).toUpperCase()}</td>
                         <td><span class="confidence">${Math.round(row.confidence * 100)}%</span></td>
                         <td><button class="play-btn" onclick="playAudio('${row.file_name}', '${row.common_name}')" ${row.file_name ? '' : 'disabled'}>▶ Play</button></td>
+                        <td class="feedback-btns" id="feedback-${row.id}">
+                            <button class="feedback-btn" onclick="sendFeedback(${row.id}, true, this)" title="Correct">👍</button>
+                            <button class="feedback-btn" onclick="sendFeedback(${row.id}, false, this)" title="Incorrect">👎</button>
+                        </td>
                     </tr>
                 `).join('');
             } catch (e) {
-                document.getElementById('results').innerHTML = '<tr><td colspan="5" class="empty">Error loading data</td></tr>';
+                document.getElementById('results').innerHTML = '<tr><td colspan="6" class="empty">Error loading data</td></tr>';
+            }
+        }
+
+        // Feedback
+        async function sendFeedback(id, correct, btn) {
+            try {
+                const res = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id, correct: correct })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Update button appearance
+                    const container = document.getElementById('feedback-' + id);
+                    const btns = container.querySelectorAll('.feedback-btn');
+                    btns.forEach(b => {
+                        b.classList.remove('selected', 'faded');
+                        if (b === btn) {
+                            b.classList.add('selected');
+                            b.classList.add(correct ? 'correct' : 'incorrect');
+                        } else {
+                            b.classList.add('faded');
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Feedback error:', e);
             }
         }
 
@@ -798,6 +848,49 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                 "success": False,
                 "error": str(e)
             })
+
+    def save_feedback(self):
+        """Save user feedback on classification accuracy."""
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length).decode('utf-8')
+            data = json.loads(body)
+
+            vocalization_id = data.get('id')
+            is_correct = data.get('correct')  # True = 👍, False = 👎
+            correct_type = data.get('correct_type')  # Optional: what it should have been
+
+            if vocalization_id is None or is_correct is None:
+                self.send_json({"success": False, "error": "Missing required fields"})
+                return
+
+            db_path = self.data_dir / "vocalization.db"
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+
+            # Create feedback table if it doesn't exist
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS feedback (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    vocalization_id INTEGER,
+                    is_correct BOOLEAN,
+                    correct_type TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (vocalization_id) REFERENCES vocalizations(id)
+                )
+            """)
+
+            cursor.execute("""
+                INSERT INTO feedback (vocalization_id, is_correct, correct_type)
+                VALUES (?, ?, ?)
+            """, (vocalization_id, is_correct, correct_type))
+
+            conn.commit()
+            conn.close()
+
+            self.send_json({"success": True})
+        except Exception as e:
+            self.send_json({"success": False, "error": str(e)})
 
     def send_vocalizations(self, query_string):
         """Send vocalizations as JSON."""
