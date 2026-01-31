@@ -72,9 +72,9 @@ bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization
 You will see a menu:
 ```
   1) North America - English (46 species, ~75 MB)
-  2) Europe - Dutch/Nederlands (199 species, ~7 GB)
-  3) Europe - German/Deutsch (199 species, ~7 GB)
-  4) Europe - English (199 species, ~7 GB)
+  2) Europe - Dutch/Nederlands (219 species, ~8 GB)
+  3) Europe - German/Deutsch (219 species, ~8 GB)
+  4) Europe - English (219 species, ~8 GB)
 
 Enter choice [1-4]:
 ```
@@ -178,7 +178,7 @@ Language: English (song/call/alarm)
 
 American Robin, American Crow, American Goldfinch, Baltimore Oriole, Barn Swallow, Black-capped Chickadee, Blue Jay, Brown-headed Cowbird, Brown Thrasher, Canada Goose, Carolina Chickadee, Carolina Wren, Cedar Waxwing, Chipping Sparrow, Common Grackle, Common Yellowthroat, Dark-eyed Junco, Downy Woodpecker, Eastern Bluebird, Eastern Meadowlark, Eastern Phoebe, Eastern Towhee, European Starling, Gray Catbird, House Finch, House Sparrow, Indigo Bunting, Killdeer, Mallard, Mourning Dove, Northern Cardinal, Northern Flicker, Northern Mockingbird, Pine Warbler, Purple Finch, Red-bellied Woodpecker, Red-tailed Hawk, Red-winged Blackbird, Scarlet Tanager, Song Sparrow, Tree Swallow, Tufted Titmouse, White-breasted Nuthatch, White-throated Sparrow, Wood Thrush, Yellow-rumped Warbler
 
-### Europe (199 species, ~7 GB)
+### Europe (219 species, ~8 GB)
 
 [**Download models**](https://huggingface.co/RonnyCHL/birdnet-vocalization-models)
 
@@ -188,6 +188,13 @@ Languages available:
 - **English**: song/call/alarm
 
 Trained with "ultimate" architecture for improved accuracy.
+
+**Includes 24 Nordic/Scandinavian species:**
+- **Owls:** Great Grey Owl, Ural Owl, Tengmalm's Owl, Pygmy Owl, Snowy Owl, Northern Hawk-Owl
+- **Grouse:** Western Capercaillie, Black Grouse, Rock Ptarmigan, Willow Ptarmigan
+- **Crossbills:** Two-barred Crossbill, Parrot Crossbill
+- **Corvids:** Siberian Jay, Spotted Nutcracker
+- **Others:** Tree Sparrow, Siberian Tit, White-throated Dipper, Three-toed Woodpecker, White-backed Woodpecker, Red-throated Pipit, Lapland Longspur, Rustic Bunting, Common Rosefinch, Red-breasted Flycatcher
 
 ---
 
@@ -343,9 +350,9 @@ bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization
 Je ziet dan een menu:
 ```
   1) North America - English (46 species, ~75 MB)
-  2) Europe - Dutch/Nederlands (199 species, ~7 GB)
-  3) Europe - German/Deutsch (199 species, ~7 GB)
-  4) Europe - English (199 species, ~7 GB)
+  2) Europe - Dutch/Nederlands (219 species, ~8 GB)
+  3) Europe - German/Deutsch (219 species, ~8 GB)
+  4) Europe - English (219 species, ~8 GB)
 
 Enter choice [1-4]:
 ```
@@ -441,7 +448,7 @@ De web viewer toont:
 
 ## Beschikbare Modellen
 
-### Europa (199 soorten, ~7 GB)
+### Europa (219 soorten, ~8 GB)
 
 [**Download modellen**](https://huggingface.co/RonnyCHL/birdnet-vocalization-models)
 
@@ -451,6 +458,13 @@ Beschikbare talen:
 - **Engels/English**: song/call/alarm
 
 Getraind met "ultimate" architectuur voor verbeterde nauwkeurigheid.
+
+**Inclusief 24 Noordse/Scandinavische soorten:**
+- **Uilen:** Laplanduil, Oeraluil, Ruigpootuil, Dwerguil, Sneeuwuil, Sperweruil
+- **Hoenders:** Auerhoen, Korhoen, Alpensneeuwhoen, Moerassneeuwhoen
+- **Kruisbekken:** Witbandkruisbek, Grote Kruisbek
+- **Kraaiachtigen:** Taigagaai, Notenkraker
+- **Overig:** Ringmus, Bruinkopmees, Waterspreeuw, Drieteenspecht, Witrugspecht, Roodkeelpieper, IJsgors, Bosgors, Roodmus, Kleine Vliegenvanger
 
 ### Noord-Amerika (46 soorten, ~75 MB)
 
