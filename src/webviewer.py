@@ -45,6 +45,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             self.send_stats()
         elif parsed.path == "/api/charts":
             self.send_charts()
+        elif parsed.path == "/api/behavior":
+            self.send_behavior_insights(parsed.query)
         elif parsed.path == "/api/audio":
             self.send_audio(parsed.query)
         elif parsed.path == "/api/update/check":
@@ -275,6 +277,119 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         .feedback-btn.selected { opacity: 1; transform: scale(1.2); }
         .feedback-btn.faded { opacity: 0.3; }
 
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--bg-tertiary);
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: var(--bg-secondary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover { background: var(--bg-tertiary); }
+        .tab-btn.active {
+            background: var(--accent);
+            color: #1a1a2e;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Behavior Insights */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .insight-card {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .insight-card h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .trend-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .trend-badge.up { background: rgba(78, 204, 163, 0.2); color: var(--accent); }
+        .trend-badge.down { background: rgba(243, 129, 129, 0.2); color: var(--danger); }
+        .trend-badge.neutral { background: var(--bg-tertiary); color: var(--text-secondary); }
+
+        .alert-list { list-style: none; }
+        .alert-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .alert-item.warning { background: rgba(249, 237, 105, 0.2); border-left: 3px solid var(--warning); }
+        .alert-item.info { background: rgba(78, 204, 163, 0.1); border-left: 3px solid var(--accent); }
+        .alert-icon { font-size: 1.2em; }
+
+        .species-bar {
+            display: flex;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        .species-bar-segment {
+            transition: width 0.3s;
+        }
+        .species-bar-segment.song { background: var(--accent); }
+        .species-bar-segment.call { background: var(--warning); }
+        .species-bar-segment.alarm { background: var(--danger); }
+        .species-row {
+            margin-bottom: 15px;
+        }
+        .species-row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .species-row-name { font-weight: bold; }
+        .species-row-total { color: var(--text-secondary); font-size: 0.9em; }
+        .species-legend {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .legend-dot.song { background: var(--accent); }
+        .legend-dot.call { background: var(--warning); }
+        .legend-dot.alarm { background: var(--danger); }
+
         /* Audio player */
         .audio-player {
             display: none;
@@ -376,6 +491,12 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             <div class="stat-card coverage"><h3>-</h3><p>Model Coverage</p></div>
         </div>
 
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+            <button class="tab-btn" onclick="switchTab('behavior')">Behavior Insights</button>
+        </div>
+
+        <div id="tab-overview" class="tab-content active">
         <div class="charts-section">
             <div class="chart-card">
                 <h3>Vocalizations Over Time (Last 7 Days)</h3>
@@ -415,6 +536,39 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             </thead>
             <tbody id="results"></tbody>
         </table>
+        </div>
+
+        <div id="tab-behavior" class="tab-content">
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <h3>Weekly Trends</h3>
+                    <div id="trends-container">Loading...</div>
+                </div>
+                <div class="insight-card">
+                    <h3>Alerts</h3>
+                    <ul class="alert-list" id="alerts-container">Loading...</ul>
+                </div>
+            </div>
+
+            <div class="insights-grid">
+                <div class="insight-card" style="grid-column: span 2;">
+                    <h3>Activity by Hour (Last 7 Days)</h3>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-card">
+                <h3>Species Behavior Breakdown (Last 30 Days)</h3>
+                <div class="species-legend">
+                    <span class="legend-item"><span class="legend-dot song"></span> Song</span>
+                    <span class="legend-item"><span class="legend-dot call"></span> Call</span>
+                    <span class="legend-item"><span class="legend-dot alarm"></span> Alarm</span>
+                </div>
+                <div id="species-breakdown" style="margin-top: 15px;">Loading...</div>
+            </div>
+        </div>
     </div>
 
     <div class="audio-player" id="audio-player">
@@ -440,7 +594,120 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         var updateInfo = null;
         var timeChart = null;
         var speciesChart = null;
+        var hourlyChart = null;
         var initialized = false;
+        var behaviorLoaded = false;
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(tabName));
+            });
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === 'tab-' + tabName);
+            });
+            // Load behavior data on first switch
+            if (tabName === 'behavior' && !behaviorLoaded) {
+                loadBehaviorData();
+                behaviorLoaded = true;
+            }
+        }
+
+        // Behavior Insights
+        async function loadBehaviorData() {
+            try {
+                const res = await fetch('/api/behavior');
+                const data = await res.json();
+                renderTrends(data.trends);
+                renderAlerts(data.alerts);
+                renderSpeciesBreakdown(data.species_breakdown);
+                renderHourlyChart(data.hourly_patterns);
+            } catch (e) {
+                console.error('Behavior data error:', e);
+            }
+        }
+
+        function renderTrends(trends) {
+            const container = document.getElementById('trends-container');
+            if (!trends || trends.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary)">Not enough data yet</p>';
+                return;
+            }
+            container.innerHTML = trends.map(t => {
+                const arrow = t.change_pct > 0 ? '↑' : (t.change_pct < 0 ? '↓' : '→');
+                const cls = t.change_pct > 0 ? 'up' : (t.change_pct < 0 ? 'down' : 'neutral');
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span class="type-${t.type}" style="text-transform: capitalize; font-weight: bold;">${t.type}</span>
+                        <span class="trend-badge ${cls}">${arrow} ${Math.abs(t.change_pct)}% (${t.this_week} vs ${t.last_week})</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderAlerts(alerts) {
+            const container = document.getElementById('alerts-container');
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '<li style="color: var(--text-secondary); padding: 10px;">No alerts - all normal</li>';
+                return;
+            }
+            container.innerHTML = alerts.map(a => `
+                <li class="alert-item ${a.severity}">
+                    <span class="alert-icon">${a.type === 'alarm_spike' ? '⚠️' : 'ℹ️'}</span>
+                    <span>${a.message}</span>
+                </li>
+            `).join('');
+        }
+
+        function renderSpeciesBreakdown(species) {
+            const container = document.getElementById('species-breakdown');
+            if (!species || species.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary)">Not enough data yet</p>';
+                return;
+            }
+            container.innerHTML = species.map(s => `
+                <div class="species-row">
+                    <div class="species-row-header">
+                        <span class="species-row-name">${s.species}</span>
+                        <span class="species-row-total">${s.total} total</span>
+                    </div>
+                    <div class="species-bar">
+                        <div class="species-bar-segment song" style="width: ${s.song_pct}%"></div>
+                        <div class="species-bar-segment call" style="width: ${s.call_pct}%"></div>
+                        <div class="species-bar-segment alarm" style="width: ${s.alarm_pct}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderHourlyChart(data) {
+            if (!data || !data.labels) return;
+            const colors = getChartColors();
+            const ctx = document.getElementById('hourlyChart').getContext('2d');
+            if (hourlyChart) hourlyChart.destroy();
+            hourlyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        { label: 'Song', data: data.song, borderColor: colors.song, backgroundColor: 'transparent', tension: 0.3 },
+                        { label: 'Call', data: data.call, borderColor: colors.call, backgroundColor: 'transparent', tension: 0.3 },
+                        { label: 'Alarm', data: data.alarm, borderColor: colors.alarm, backgroundColor: 'transparent', tension: 0.3 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: colors.text } } },
+                    scales: {
+                        x: { ticks: { color: colors.text }, grid: { color: colors.grid } },
+                        y: { ticks: { color: colors.text }, grid: { color: colors.grid }, beginAtZero: true }
+                    }
+                }
+            });
+        }
 
         // Theme management - must be global for onclick
         function toggleTheme() {
@@ -490,6 +757,14 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                 speciesChart.options.scales.x.grid.color = colors.grid;
                 speciesChart.options.scales.y.grid.color = colors.grid;
                 speciesChart.update();
+            }
+            if (hourlyChart) {
+                hourlyChart.options.scales.x.ticks.color = colors.text;
+                hourlyChart.options.scales.y.ticks.color = colors.text;
+                hourlyChart.options.scales.x.grid.color = colors.grid;
+                hourlyChart.options.scales.y.grid.color = colors.grid;
+                hourlyChart.options.plugins.legend.labels.color = colors.text;
+                hourlyChart.update();
             }
         }
 
@@ -1030,6 +1305,183 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                 "labels": [row[0] for row in top_species],
                 "values": [row[1] for row in top_species]
             }
+        })
+
+    def send_behavior_insights(self, query_string):
+        """Send behavior insights data for species analysis."""
+        params = parse_qs(query_string)
+        species_filter = params.get("species", [None])[0]
+
+        db_path = self.data_dir / "vocalization.db"
+        if not db_path.exists():
+            self.send_json({
+                "species_breakdown": [],
+                "hourly_patterns": [],
+                "alerts": [],
+                "trends": []
+            })
+            return
+
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        # 1. Species breakdown: % song/call/alarm per species (last 30 days)
+        cursor.execute("""
+            SELECT common_name, vocalization_type, COUNT(*) as count
+            FROM vocalizations
+            WHERE classified_at >= date('now', '-30 days')
+            GROUP BY common_name, vocalization_type
+            ORDER BY common_name
+        """)
+        species_data = {}
+        for row in cursor.fetchall():
+            name, vtype, count = row
+            if name not in species_data:
+                species_data[name] = {"song": 0, "call": 0, "alarm": 0, "total": 0}
+            species_data[name][vtype] = count
+            species_data[name]["total"] += count
+
+        species_breakdown = []
+        for name, data in sorted(species_data.items(), key=lambda x: x[1]["total"], reverse=True)[:15]:
+            total = data["total"]
+            if total > 0:
+                species_breakdown.append({
+                    "species": name,
+                    "total": total,
+                    "song_pct": round(data["song"] / total * 100),
+                    "call_pct": round(data["call"] / total * 100),
+                    "alarm_pct": round(data["alarm"] / total * 100)
+                })
+
+        # 2. Hourly patterns (when are birds most active?)
+        cursor.execute("""
+            SELECT strftime('%H', classified_at) as hour, vocalization_type, COUNT(*) as count
+            FROM vocalizations
+            WHERE classified_at >= date('now', '-7 days')
+            GROUP BY hour, vocalization_type
+            ORDER BY hour
+        """)
+        hourly_data = {str(h).zfill(2): {"song": 0, "call": 0, "alarm": 0} for h in range(24)}
+        for row in cursor.fetchall():
+            hour, vtype, count = row
+            if hour in hourly_data:
+                hourly_data[hour][vtype] = count
+
+        hourly_patterns = {
+            "labels": [f"{h}:00" for h in range(24)],
+            "song": [hourly_data[str(h).zfill(2)]["song"] for h in range(24)],
+            "call": [hourly_data[str(h).zfill(2)]["call"] for h in range(24)],
+            "alarm": [hourly_data[str(h).zfill(2)]["alarm"] for h in range(24)]
+        }
+
+        # 3. Anomaly detection: unusual alarm activity
+        alerts = []
+
+        # Check for alarm spikes in last 24h vs previous week average
+        cursor.execute("""
+            SELECT common_name, COUNT(*) as recent_count
+            FROM vocalizations
+            WHERE vocalization_type = 'alarm'
+            AND classified_at >= datetime('now', '-24 hours')
+            GROUP BY common_name
+        """)
+        recent_alarms = {row[0]: row[1] for row in cursor.fetchall()}
+
+        cursor.execute("""
+            SELECT common_name, COUNT(*) * 1.0 / 7 as avg_daily
+            FROM vocalizations
+            WHERE vocalization_type = 'alarm'
+            AND classified_at >= date('now', '-8 days')
+            AND classified_at < date('now', '-1 days')
+            GROUP BY common_name
+        """)
+        avg_alarms = {row[0]: row[1] for row in cursor.fetchall()}
+
+        for species, count in recent_alarms.items():
+            avg = avg_alarms.get(species, 0)
+            if avg > 0 and count > avg * 3:  # 3x more than usual
+                increase_pct = round((count - avg) / avg * 100)
+                alerts.append({
+                    "type": "alarm_spike",
+                    "species": species,
+                    "message": f"{species}: {count} alarm calls in 24h (+{increase_pct}% vs normal)",
+                    "severity": "warning" if count > avg * 5 else "info"
+                })
+
+        # Check for unusual silence (species normally active but not heard)
+        cursor.execute("""
+            SELECT common_name, COUNT(*) as count
+            FROM vocalizations
+            WHERE classified_at >= date('now', '-8 days')
+            AND classified_at < date('now', '-1 days')
+            GROUP BY common_name
+            HAVING count >= 7
+        """)
+        normally_active = {row[0]: row[1] / 7 for row in cursor.fetchall()}
+
+        cursor.execute("""
+            SELECT common_name, COUNT(*) as count
+            FROM vocalizations
+            WHERE classified_at >= date('now', '-1 days')
+            GROUP BY common_name
+        """)
+        today_active = {row[0]: row[1] for row in cursor.fetchall()}
+
+        for species, avg in normally_active.items():
+            today = today_active.get(species, 0)
+            if avg >= 3 and today == 0:  # Usually 3+/day, but 0 today
+                alerts.append({
+                    "type": "silence",
+                    "species": species,
+                    "message": f"{species}: No detections today (usually ~{round(avg)}/day)",
+                    "severity": "info"
+                })
+
+        # 4. Trends: weekly comparison
+        cursor.execute("""
+            SELECT vocalization_type, COUNT(*) as count
+            FROM vocalizations
+            WHERE classified_at >= date('now', '-7 days')
+            GROUP BY vocalization_type
+        """)
+        this_week = {row[0]: row[1] for row in cursor.fetchall()}
+
+        cursor.execute("""
+            SELECT vocalization_type, COUNT(*) as count
+            FROM vocalizations
+            WHERE classified_at >= date('now', '-14 days')
+            AND classified_at < date('now', '-7 days')
+            GROUP BY vocalization_type
+        """)
+        last_week = {row[0]: row[1] for row in cursor.fetchall()}
+
+        trends = []
+        for vtype in ["song", "call", "alarm"]:
+            this_count = this_week.get(vtype, 0)
+            last_count = last_week.get(vtype, 0)
+            if last_count > 0:
+                change = round((this_count - last_count) / last_count * 100)
+                trends.append({
+                    "type": vtype,
+                    "this_week": this_count,
+                    "last_week": last_count,
+                    "change_pct": change
+                })
+            else:
+                trends.append({
+                    "type": vtype,
+                    "this_week": this_count,
+                    "last_week": 0,
+                    "change_pct": 0
+                })
+
+        conn.close()
+
+        self.send_json({
+            "species_breakdown": species_breakdown,
+            "hourly_patterns": hourly_patterns,
+            "alerts": alerts,
+            "trends": trends
         })
 
     def send_audio(self, query_string):
