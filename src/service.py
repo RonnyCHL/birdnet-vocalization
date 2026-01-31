@@ -54,7 +54,8 @@ class VocalizationService:
     def __init__(self, birdnet_dir: Path, models_dir: Path, data_dir: Path, language: str = 'en'):
         self.birdnet_dir = birdnet_dir
         self.birdnet_db = birdnet_dir / "scripts" / "birds.db"
-        self.extracted_dir = birdnet_dir / "extracted" / "By_Date"
+        # BirdNET-Pi stores extracted audio in BirdSongs/Extracted/By_Date/
+        self.extracted_dir = birdnet_dir / "BirdSongs" / "Extracted" / "By_Date"
 
         self.data_dir = data_dir
         self.vocalization_db = data_dir / "vocalization.db"
