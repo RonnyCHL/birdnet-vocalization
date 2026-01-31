@@ -201,7 +201,19 @@ fi
 # Install packages in venv
 echo "Installing Python packages (this may take a few minutes)..."
 "$PIP_BIN" install --upgrade pip --quiet
-"$PIP_BIN" install torch librosa scikit-image numpy huggingface_hub --quiet
+
+# Detect architecture and install appropriate PyTorch version
+ARCH=$(uname -m)
+if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "armv7l" ]; then
+    # Raspberry Pi (ARM) - use piwheels compatible version
+    echo "Detected Raspberry Pi ($ARCH), installing compatible PyTorch..."
+    "$PIP_BIN" install torch==2.0.1 --extra-index-url https://www.piwheels.org/simple --quiet
+else
+    # x86/x64 - use standard PyTorch
+    "$PIP_BIN" install torch==2.0.1 --quiet
+fi
+
+"$PIP_BIN" install librosa scikit-image numpy huggingface_hub --quiet
 
 # Download models from Hugging Face
 echo -e "${BLUE}[5/7] Downloading models from Hugging Face ($MODEL_SIZE)...${NC}"
