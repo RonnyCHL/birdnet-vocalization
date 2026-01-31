@@ -164,7 +164,15 @@ class VocalizationService:
         if not file_name:
             return None
 
-        # Try direct path first
+        # If File_Name is already an absolute path, use it directly
+        if file_name.startswith('/'):
+            audio_path = Path(file_name)
+            if audio_path.exists():
+                return audio_path
+            # Also try just the filename part
+            file_name = audio_path.name
+
+        # Try direct path first (relative to birdnet_dir)
         audio_path = self.birdnet_dir / file_name
         if audio_path.exists():
             return audio_path
@@ -176,9 +184,20 @@ class VocalizationService:
             if audio_path.exists():
                 return audio_path
 
-        # Search in extracted directory
+        # Try without By_Date (some setups use flat structure)
+        audio_path = self.extracted_dir / file_name
+        if audio_path.exists():
+            return audio_path
+
+        # Search in extracted directory recursively
         for audio_file in self.extracted_dir.rglob(file_name):
             return audio_file
+
+        # Last resort: search in entire BirdSongs directory
+        birdsongs_dir = self.birdnet_dir / "BirdSongs"
+        if birdsongs_dir.exists():
+            for audio_file in birdsongs_dir.rglob(file_name):
+                return audio_file
 
         return None
 
