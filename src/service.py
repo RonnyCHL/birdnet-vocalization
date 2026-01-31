@@ -54,8 +54,17 @@ class VocalizationService:
     def __init__(self, birdnet_dir: Path, models_dir: Path, data_dir: Path, language: str = 'en'):
         self.birdnet_dir = birdnet_dir
         self.birdnet_db = birdnet_dir / "scripts" / "birds.db"
-        # BirdNET-Pi stores extracted audio in BirdSongs/Extracted/By_Date/
+
+        # BirdNET-Pi stores extracted audio - check multiple possible locations
+        # Some setups: ~/BirdNET-Pi/BirdSongs/Extracted/By_Date/
+        # Other setups: ~/BirdSongs/Extracted/By_Date/ (outside BirdNET-Pi dir)
         self.extracted_dir = birdnet_dir / "BirdSongs" / "Extracted" / "By_Date"
+
+        # If not found, try user's home directory
+        if not self.extracted_dir.parent.exists():
+            home_birdsongs = birdnet_dir.parent / "BirdSongs" / "Extracted" / "By_Date"
+            if home_birdsongs.parent.exists():
+                self.extracted_dir = home_birdsongs
 
         self.data_dir = data_dir
         self.vocalization_db = data_dir / "vocalization.db"
@@ -193,10 +202,22 @@ class VocalizationService:
         for audio_file in self.extracted_dir.rglob(file_name):
             return audio_file
 
-        # Last resort: search in entire BirdSongs directory
+        # Try BirdSongs in birdnet_dir
         birdsongs_dir = self.birdnet_dir / "BirdSongs"
         if birdsongs_dir.exists():
             for audio_file in birdsongs_dir.rglob(file_name):
+                return audio_file
+
+        # Try BirdSongs in parent directory (some setups have ~/BirdSongs separate from ~/BirdNET-Pi)
+        home_birdsongs = self.birdnet_dir.parent / "BirdSongs"
+        if home_birdsongs.exists():
+            # Try By_Date structure first
+            if date_str:
+                audio_path = home_birdsongs / "Extracted" / "By_Date" / date_str / file_name
+                if audio_path.exists():
+                    return audio_path
+            # Search recursively
+            for audio_file in home_birdsongs.rglob(file_name):
                 return audio_file
 
         return None
