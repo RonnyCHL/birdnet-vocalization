@@ -1,0 +1,77 @@
+name: "🐛 Bug Report"
+description: Report a problem with the vocalization classifier
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+
+        Thank you for reporting issues! Please provide as much detail as possible.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? What did you expect to happen?
+      placeholder: "The service crashes when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log Output
+      description: |
+        Please include relevant log output:
+        ```
+        journalctl -u birdnet-vocalization -n 50
+        ```
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: pi_model
+    attributes:
+      label: Raspberry Pi Model
+      description: "Run: cat /proc/device-tree/model"
+      placeholder: "e.g., Raspberry Pi 4 Model B Rev 1.4"
+    validations:
+      required: true
+
+  - type: input
+    id: os_version
+    attributes:
+      label: OS Version
+      description: "Run: cat /etc/os-release | grep PRETTY_NAME"
+      placeholder: "e.g., Debian GNU/Linux 12 (bookworm)"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: region
+    attributes:
+      label: Installation Region
+      options:
+        - North America - English
+        - Europe - Dutch
+        - Europe - German
+        - Europe - English
+        - Europe - Swedish
+        - Europe - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Install with option X
+        2. Wait for detection
+        3. See error
+    validations:
+      required: false

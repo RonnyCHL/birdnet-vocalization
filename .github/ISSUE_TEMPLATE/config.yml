@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussions
+    url: https://github.com/RonnyCHL/birdnet-vocalization/discussions
+    about: Ask questions or share your experiences
+  - name: 📖 Documentation
+    url: https://github.com/RonnyCHL/birdnet-vocalization#readme
+    about: Check the README for installation and troubleshooting
+  - name: 🤗 Available Models
+    url: https://huggingface.co/RonnyCHL/birdnet-vocalization-models
+    about: View all available species models on Hugging Face

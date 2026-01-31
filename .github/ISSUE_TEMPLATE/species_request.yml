@@ -1,0 +1,101 @@
+name: "🐦 Species Request"
+description: Request a new bird species to be added to the vocalization models
+title: "[Species Request] "
+labels: ["species-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Request a New Species
+
+        Thank you for helping expand our model coverage! Before submitting:
+        - Check the [current species list](https://huggingface.co/RonnyCHL/birdnet-vocalization-models) to see if it's already available
+        - We currently support **219 European species** and **46 North American species**
+
+  - type: input
+    id: common_name
+    attributes:
+      label: Common Name
+      description: The bird's common name in English
+      placeholder: "e.g., Eurasian Wren"
+    validations:
+      required: true
+
+  - type: input
+    id: scientific_name
+    attributes:
+      label: Scientific Name
+      description: The bird's scientific (Latin) name
+      placeholder: "e.g., Troglodytes troglodytes"
+    validations:
+      required: true
+
+  - type: input
+    id: local_name
+    attributes:
+      label: Local Name (optional)
+      description: The bird's name in your language
+      placeholder: "e.g., Winterkoning (Dutch), Zaunkönig (German)"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: region
+    attributes:
+      label: Region
+      description: Where is this species commonly found?
+      options:
+        - Europe - Western (UK, France, Germany, Benelux)
+        - Europe - Northern (Scandinavia, Finland, Baltic)
+        - Europe - Southern (Spain, Italy, Greece, Portugal)
+        - Europe - Eastern (Poland, Czech, Hungary, Balkans)
+        - North America - Eastern
+        - North America - Western
+        - Other (please specify in notes)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How common is this species in your area?
+      options:
+        - High - Very common, detected daily
+        - Medium - Regular, detected weekly
+        - Low - Occasional, would be nice to have
+    validations:
+      required: true
+
+  - type: textarea
+    id: xeno_canto
+    attributes:
+      label: Xeno-canto Examples (optional)
+      description: |
+        Links to good quality recordings on xeno-canto.org help us train better models.
+        Ideally include examples of song, call, AND alarm if available.
+      placeholder: |
+        Song: https://xeno-canto.org/123456
+        Call: https://xeno-canto.org/123457
+        Alarm: https://xeno-canto.org/123458
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional Notes
+      description: Any other relevant information
+      placeholder: "e.g., This species is expanding its range northward..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked that this species is not already in the model list
+          required: true
+        - label: I have verified the scientific name is correct
+          required: true

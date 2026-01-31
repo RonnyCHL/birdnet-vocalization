@@ -1,0 +1,97 @@
+name: "📊 Model Feedback"
+description: Report incorrect classifications to help improve model accuracy
+title: "[Feedback] "
+labels: ["model-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Model Feedback
+
+        Your feedback helps us improve model accuracy! If you notice incorrect classifications,
+        please report them here. We collect this feedback to retrain models periodically.
+
+  - type: input
+    id: species
+    attributes:
+      label: Species
+      description: Which bird species was detected?
+      placeholder: "e.g., Turdus merula (Blackbird)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: classification
+    attributes:
+      label: Model Classification
+      description: What did the model classify it as?
+      options:
+        - Song
+        - Call
+        - Alarm
+    validations:
+      required: true
+
+  - type: dropdown
+    id: correct_type
+    attributes:
+      label: Correct Classification
+      description: What should it have been?
+      options:
+        - Song
+        - Call
+        - Alarm
+        - Not sure / Unknown
+    validations:
+      required: true
+
+  - type: input
+    id: confidence
+    attributes:
+      label: Confidence Level
+      description: What was the confidence percentage?
+      placeholder: "e.g., 87%"
+    validations:
+      required: false
+
+  - type: input
+    id: date_time
+    attributes:
+      label: Date and Time
+      description: When was this detection?
+      placeholder: "e.g., 2026-01-31 08:30"
+    validations:
+      required: false
+
+  - type: textarea
+    id: audio_link
+    attributes:
+      label: Audio File (optional)
+      description: |
+        If possible, share the audio file. You can:
+        - Upload to a file sharing service and paste the link
+        - Describe where to find it in your BirdNET-Pi
+      placeholder: "File: Blackbird-91-2026-01-31-birdnet-08:30:15.mp3"
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional Notes
+      description: Any context that might help (behavior observed, multiple calls, etc.)
+      placeholder: "The bird was clearly singing from a tree, not alarm calling..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often does this happen?
+      options:
+        - One-time / Rare
+        - Occasionally (few times per week)
+        - Frequently (daily)
+        - Almost always for this species
+    validations:
+      required: true
