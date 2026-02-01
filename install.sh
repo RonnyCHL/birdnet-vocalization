@@ -16,6 +16,9 @@
 
 set -e
 
+# Ensure we're in a valid directory (fixes issue after uninstall removes current dir)
+cd ~ 2>/dev/null || cd /tmp
+
 # Parse command line arguments
 REGION_CHOICE=""
 while [[ $# -gt 0 ]]; do

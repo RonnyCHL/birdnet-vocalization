@@ -12,6 +12,9 @@
 
 set -e
 
+# Move to safe directory before we delete anything
+cd ~ 2>/dev/null || cd /tmp
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
