@@ -95,6 +95,7 @@ class VocalizationService:
                 vocalization_type_display TEXT,
                 confidence REAL,
                 probabilities TEXT,
+                detection_time TIMESTAMP,
                 classified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -102,6 +103,13 @@ class VocalizationService:
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_birdnet_id ON vocalizations(birdnet_id)
         """)
+
+        # Migration: add detection_time column if missing (for existing installations)
+        cursor.execute("PRAGMA table_info(vocalizations)")
+        columns = [col[1] for col in cursor.fetchall()]
+        if 'detection_time' not in columns:
+            cursor.execute("ALTER TABLE vocalizations ADD COLUMN detection_time TIMESTAMP")
+            logger.info("Migrated database: added detection_time column")
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS service_state (
@@ -226,14 +234,22 @@ class VocalizationService:
         """Store classification result."""
         import json
 
+        # Build detection_time from BirdNET-Pi's Date and Time fields
+        date_str = detection.get('Date', '')
+        time_str = detection.get('Time', '')
+        detection_time = None
+        if date_str and time_str:
+            detection_time = f"{date_str} {time_str}"
+
         conn = sqlite3.connect(self.vocalization_db)
         cursor = conn.cursor()
 
         cursor.execute("""
             INSERT OR REPLACE INTO vocalizations
             (birdnet_id, file_name, common_name, scientific_name,
-             vocalization_type, vocalization_type_display, confidence, probabilities)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             vocalization_type, vocalization_type_display, confidence, probabilities,
+             detection_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             detection['rowid'],
             detection.get('File_Name', ''),
@@ -242,7 +258,8 @@ class VocalizationService:
             result['type'],
             result['type_display'],
             result['confidence'],
-            json.dumps(result['probabilities'])
+            json.dumps(result['probabilities']),
+            detection_time
         ))
 
         conn.commit()

@@ -526,7 +526,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         <table>
             <thead>
                 <tr>
-                    <th>Time</th>
+                    <th>Detected</th>
                     <th>Species</th>
                     <th>Type</th>
                     <th>Confidence</th>
@@ -930,7 +930,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
                 tbody.innerHTML = data.map(row => `
                     <tr class="clickable">
-                        <td>${new Date(row.classified_at + 'Z').toLocaleString()}</td>
+                        <td>${new Date((row.display_time || row.classified_at) + 'Z').toLocaleString()}</td>
                         <td>${row.common_name}</td>
                         <td class="type-${row.vocalization_type}">${(row.vocalization_type_display || row.vocalization_type).toUpperCase()}</td>
                         <td><span class="confidence">${Math.round(row.confidence * 100)}%</span></td>
@@ -1183,7 +1183,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        query = "SELECT * FROM vocalizations WHERE 1=1"
+        query = "SELECT *, COALESCE(detection_time, classified_at) as display_time FROM vocalizations WHERE 1=1"
         args = []
 
         if voc_type:
@@ -1193,7 +1193,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             query += " AND common_name LIKE ?"
             args.append(f"%{species}%")
 
-        query += " ORDER BY classified_at DESC LIMIT ?"
+        query += " ORDER BY COALESCE(detection_time, classified_at) DESC LIMIT ?"
         args.append(limit)
 
         cursor.execute(query, args)
@@ -1256,9 +1256,9 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
         # Daily counts for last 7 days
         cursor.execute("""
-            SELECT date(classified_at) as day, vocalization_type, COUNT(*) as count
+            SELECT date(COALESCE(detection_time, classified_at)) as day, vocalization_type, COUNT(*) as count
             FROM vocalizations
-            WHERE classified_at >= date('now', '-7 days')
+            WHERE COALESCE(detection_time, classified_at) >= date('now', '-7 days')
             GROUP BY day, vocalization_type
             ORDER BY day
         """)
@@ -1329,7 +1329,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         cursor.execute("""
             SELECT common_name, vocalization_type, COUNT(*) as count
             FROM vocalizations
-            WHERE classified_at >= date('now', '-30 days')
+            WHERE COALESCE(detection_time, classified_at) >= date('now', '-30 days')
             GROUP BY common_name, vocalization_type
             ORDER BY common_name
         """)
@@ -1355,9 +1355,9 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
         # 2. Hourly patterns (when are birds most active?)
         cursor.execute("""
-            SELECT strftime('%H', classified_at) as hour, vocalization_type, COUNT(*) as count
+            SELECT strftime('%H', COALESCE(detection_time, classified_at)) as hour, vocalization_type, COUNT(*) as count
             FROM vocalizations
-            WHERE classified_at >= date('now', '-7 days')
+            WHERE COALESCE(detection_time, classified_at) >= date('now', '-7 days')
             GROUP BY hour, vocalization_type
             ORDER BY hour
         """)
@@ -1382,7 +1382,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             SELECT common_name, COUNT(*) as recent_count
             FROM vocalizations
             WHERE vocalization_type = 'alarm'
-            AND classified_at >= datetime('now', '-24 hours')
+            AND COALESCE(detection_time, classified_at) >= datetime('now', '-24 hours')
             GROUP BY common_name
         """)
         recent_alarms = {row[0]: row[1] for row in cursor.fetchall()}
@@ -1391,8 +1391,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             SELECT common_name, COUNT(*) * 1.0 / 7 as avg_daily
             FROM vocalizations
             WHERE vocalization_type = 'alarm'
-            AND classified_at >= date('now', '-8 days')
-            AND classified_at < date('now', '-1 days')
+            AND COALESCE(detection_time, classified_at) >= date('now', '-8 days')
+            AND COALESCE(detection_time, classified_at) < date('now', '-1 days')
             GROUP BY common_name
         """)
         avg_alarms = {row[0]: row[1] for row in cursor.fetchall()}
@@ -1412,8 +1412,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         cursor.execute("""
             SELECT common_name, COUNT(*) as count
             FROM vocalizations
-            WHERE classified_at >= date('now', '-8 days')
-            AND classified_at < date('now', '-1 days')
+            WHERE COALESCE(detection_time, classified_at) >= date('now', '-8 days')
+            AND COALESCE(detection_time, classified_at) < date('now', '-1 days')
             GROUP BY common_name
             HAVING count >= 7
         """)
@@ -1422,7 +1422,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         cursor.execute("""
             SELECT common_name, COUNT(*) as count
             FROM vocalizations
-            WHERE classified_at >= date('now', '-1 days')
+            WHERE COALESCE(detection_time, classified_at) >= date('now', '-1 days')
             GROUP BY common_name
         """)
         today_active = {row[0]: row[1] for row in cursor.fetchall()}
@@ -1441,7 +1441,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         cursor.execute("""
             SELECT vocalization_type, COUNT(*) as count
             FROM vocalizations
-            WHERE classified_at >= date('now', '-7 days')
+            WHERE COALESCE(detection_time, classified_at) >= date('now', '-7 days')
             GROUP BY vocalization_type
         """)
         this_week = {row[0]: row[1] for row in cursor.fetchall()}
@@ -1449,8 +1449,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         cursor.execute("""
             SELECT vocalization_type, COUNT(*) as count
             FROM vocalizations
-            WHERE classified_at >= date('now', '-14 days')
-            AND classified_at < date('now', '-7 days')
+            WHERE COALESCE(detection_time, classified_at) >= date('now', '-14 days')
+            AND COALESCE(detection_time, classified_at) < date('now', '-7 days')
             GROUP BY vocalization_type
         """)
         last_week = {row[0]: row[1] for row in cursor.fetchall()}
