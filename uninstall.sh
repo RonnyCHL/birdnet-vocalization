@@ -5,7 +5,9 @@
 # Completely removes the vocalization classifier from your system.
 #
 # Usage:
-#   bash /opt/birdnet-vocalization/uninstall.sh
+#   bash <(curl -sSL .../uninstall.sh)           # Interactive
+#   curl ... | bash -s -- --yes                  # Non-interactive (auto-confirm)
+#   curl ... | bash -s -- --yes --keep-data      # Keep database backup
 #
 
 set -e
@@ -19,6 +21,26 @@ NC='\033[0m'
 
 INSTALL_DIR="/opt/birdnet-vocalization"
 SERVICE_NAME="birdnet-vocalization"
+
+# Parse arguments
+AUTO_CONFIRM=false
+KEEP_DATA=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --yes|-y)
+            AUTO_CONFIRM=true
+            shift
+            ;;
+        --keep-data)
+            KEEP_DATA=true
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
 
 echo ""
 echo -e "${YELLOW}"
@@ -45,10 +67,32 @@ echo ""
 echo -e "${BLUE}Your BirdNET-Pi installation will NOT be affected.${NC}"
 echo ""
 
-read -p "Are you sure you want to uninstall? [y/N]: " confirm
-if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    echo "Uninstall cancelled."
-    exit 0
+if [ "$AUTO_CONFIRM" = true ]; then
+    echo -e "${YELLOW}Auto-confirmed with --yes flag${NC}"
+else
+    # Check if running interactively
+    if [ -t 0 ]; then
+        read -p "Are you sure you want to uninstall? [y/N]: " confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            echo "Uninstall cancelled."
+            exit 0
+        fi
+    else
+        echo -e "${RED}Error: Not running interactively and --yes flag not provided.${NC}"
+        echo ""
+        echo "Use one of these methods:"
+        echo ""
+        echo "  Interactive:"
+        echo "    bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/uninstall.sh)"
+        echo ""
+        echo "  Non-interactive (auto-confirm):"
+        echo "    curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/uninstall.sh | bash -s -- --yes"
+        echo ""
+        echo "  Keep data backup:"
+        echo "    curl ... | bash -s -- --yes --keep-data"
+        echo ""
+        exit 1
+    fi
 fi
 
 echo ""
@@ -74,7 +118,20 @@ echo -e "${BLUE}[4/4] Removing installation directory...${NC}"
 if [ -f "$INSTALL_DIR/data/vocalization.db" ]; then
     echo ""
     echo -e "${YELLOW}Found vocalization database with your classification history.${NC}"
-    read -p "Keep the data directory for backup? [Y/n]: " keep_data
+
+    if [ "$AUTO_CONFIRM" = true ]; then
+        # Use --keep-data flag in non-interactive mode
+        if [ "$KEEP_DATA" = true ]; then
+            keep_data="y"
+        else
+            keep_data="n"
+        fi
+    elif [ -t 0 ]; then
+        read -p "Keep the data directory for backup? [Y/n]: " keep_data
+    else
+        keep_data="y"  # Default to keeping data if not interactive
+    fi
+
     if [[ "$keep_data" =~ ^[Nn]$ ]]; then
         sudo rm -rf "$INSTALL_DIR"
         echo -e "${GREEN}Installation directory removed (including data)${NC}"
