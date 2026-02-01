@@ -148,8 +148,13 @@ TRANSLATIONS = {
 logger = logging.getLogger(__name__)
 
 
-def create_cnn_model(num_classes=3):
-    """Create CNN model matching trained architecture."""
+def create_cnn_model(num_classes=3, ultimate=False):
+    """Create CNN model matching trained architecture.
+
+    Args:
+        num_classes: Number of output classes (default 3: song/call/alarm)
+        ultimate: If True, use deeper 4-layer architecture (for EU models)
+    """
     torch = get_torch()
     nn = torch.nn
 
@@ -193,7 +198,72 @@ def create_cnn_model(num_classes=3):
             x = self.classifier(x)
             return x
 
+    class VocalizationCNNUltimate(nn.Module):
+        """Deeper CNN model (4 conv blocks) for improved accuracy."""
+
+        def __init__(self, input_shape=(128, 128), num_classes=3):
+            super().__init__()
+
+            self.features = nn.Sequential(
+                # Block 1: 1 -> 32
+                nn.Conv2d(1, 32, kernel_size=3, padding=1),
+                nn.BatchNorm2d(32),
+                nn.ReLU(),
+                nn.MaxPool2d(2),
+                nn.Dropout2d(0.25),
+                # Block 2: 32 -> 64
+                nn.Conv2d(32, 64, kernel_size=3, padding=1),
+                nn.BatchNorm2d(64),
+                nn.ReLU(),
+                nn.MaxPool2d(2),
+                nn.Dropout2d(0.25),
+                # Block 3: 64 -> 128
+                nn.Conv2d(64, 128, kernel_size=3, padding=1),
+                nn.BatchNorm2d(128),
+                nn.ReLU(),
+                nn.MaxPool2d(2),
+                nn.Dropout2d(0.25),
+                # Block 4: 128 -> 256 (extra block for ultimate)
+                nn.Conv2d(128, 256, kernel_size=3, padding=1),
+                nn.BatchNorm2d(256),
+                nn.ReLU(),
+                nn.MaxPool2d(2),
+                nn.Dropout2d(0.25),
+            )
+
+            # 4 pooling layers = /16
+            h, w = input_shape[0] // 16, input_shape[1] // 16
+            flatten_size = 256 * h * w
+
+            self.classifier = nn.Sequential(
+                nn.Flatten(),
+                nn.Linear(flatten_size, 512),
+                nn.ReLU(),
+                nn.Dropout(0.5),
+                nn.Linear(512, 256),
+                nn.ReLU(),
+                nn.Dropout(0.5),
+                nn.Linear(256, num_classes)
+            )
+
+        def forward(self, x):
+            x = self.features(x)
+            x = self.classifier(x)
+            return x
+
+    if ultimate:
+        return VocalizationCNNUltimate(num_classes=num_classes)
     return VocalizationCNN(num_classes=num_classes)
+
+
+def detect_model_architecture(state_dict):
+    """Detect if model is standard (3 conv) or ultimate (4 conv) based on state_dict keys."""
+    # Ultimate models have features.15.weight (4th conv block)
+    # Standard models only go up to features.12 (3 conv blocks)
+    for key in state_dict.keys():
+        if key.startswith('features.15.'):
+            return True  # Ultimate architecture
+    return False  # Standard architecture
 
 
 class VocalizationClassifier:
@@ -291,8 +361,15 @@ class VocalizationClassifier:
             checkpoint = torch.load(model_path, map_location='cpu', weights_only=False)
 
             num_classes = checkpoint.get('num_classes', 3)
-            model = create_cnn_model(num_classes=num_classes)
-            model.load_state_dict(checkpoint['model_state_dict'])
+            state_dict = checkpoint['model_state_dict']
+
+            # Auto-detect architecture from state_dict keys
+            is_ultimate = detect_model_architecture(state_dict)
+            if is_ultimate:
+                logger.debug(f"Detected ultimate architecture for {model_path.name}")
+
+            model = create_cnn_model(num_classes=num_classes, ultimate=is_ultimate)
+            model.load_state_dict(state_dict)
             model.eval()
 
             class_names = checkpoint.get('class_names', ['song', 'call', 'alarm'])
