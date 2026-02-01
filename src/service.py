@@ -123,17 +123,46 @@ class VocalizationService:
         logger.info(f"Database initialized: {self.vocalization_db}")
 
     def _load_last_processed(self):
-        """Load last processed detection ID."""
+        """Load last processed detection ID.
+
+        On fresh install (no saved state), start from the current max ID
+        in BirdNET-Pi's database to skip historical data.
+        """
         conn = sqlite3.connect(self.vocalization_db)
         cursor = conn.cursor()
         cursor.execute(
             "SELECT value FROM service_state WHERE key = 'last_processed_id'"
         )
         row = cursor.fetchone()
+        conn.close()
+
         if row:
             self.last_processed_id = int(row[0])
-        conn.close()
-        logger.info(f"Resuming from detection ID: {self.last_processed_id}")
+            logger.info(f"Resuming from detection ID: {self.last_processed_id}")
+        else:
+            # Fresh install: start from current max ID to skip historical data
+            self.last_processed_id = self._get_current_max_id()
+            if self.last_processed_id > 0:
+                self._save_last_processed()
+                logger.info(f"Fresh install: starting from current max ID {self.last_processed_id} (skipping historical data)")
+            else:
+                logger.info("Fresh install: no existing detections found, starting from 0")
+
+    def _get_current_max_id(self) -> int:
+        """Get current max detection ID from BirdNET-Pi database."""
+        if not self.birdnet_db.exists():
+            return 0
+
+        try:
+            conn = sqlite3.connect(self.birdnet_db)
+            cursor = conn.cursor()
+            cursor.execute("SELECT MAX(rowid) FROM detections")
+            row = cursor.fetchone()
+            conn.close()
+            return row[0] if row and row[0] else 0
+        except Exception as e:
+            logger.warning(f"Could not get max ID from BirdNET-Pi: {e}")
+            return 0
 
     def _save_last_processed(self):
         """Save last processed detection ID."""
