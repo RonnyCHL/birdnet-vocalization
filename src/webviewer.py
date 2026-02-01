@@ -1489,7 +1489,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         params = parse_qs(query_string)
         filename = params.get("file", [None])[0]
 
-        if not filename or not self.birdnet_dir:
+        if not filename:
             self.send_error(404, "File not found")
             return
 
@@ -1498,19 +1498,35 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             self.send_error(403, "Forbidden")
             return
 
-        # Search for the file in BirdNET-Pi extracted folder
-        extracted_dir = self.birdnet_dir / "extracted" / "By_Date"
         audio_path = None
 
-        # Try direct path first
-        direct_path = self.birdnet_dir / filename
-        if direct_path.exists():
-            audio_path = direct_path
-        else:
-            # Search in extracted directory
-            for f in extracted_dir.rglob(filename):
-                audio_path = f
-                break
+        # Build list of directories to search
+        search_dirs = []
+
+        # 1. BirdNET-Pi directory (if set)
+        if self.birdnet_dir:
+            search_dirs.append(self.birdnet_dir / "BirdSongs" / "Extracted" / "By_Date")
+            search_dirs.append(self.birdnet_dir / "extracted" / "By_Date")  # Legacy path
+
+        # 2. Home directory BirdSongs (some installations have it outside BirdNET-Pi)
+        home_dir = Path.home()
+        search_dirs.append(home_dir / "BirdSongs" / "Extracted" / "By_Date")
+
+        # 3. Try direct path from birdnet_dir
+        if self.birdnet_dir:
+            direct_path = self.birdnet_dir / filename
+            if direct_path.exists():
+                audio_path = direct_path
+
+        # Search in all directories
+        if not audio_path:
+            for search_dir in search_dirs:
+                if search_dir.exists():
+                    for f in search_dir.rglob(filename):
+                        audio_path = f
+                        break
+                if audio_path:
+                    break
 
         if not audio_path or not audio_path.exists():
             self.send_error(404, "Audio file not found")
