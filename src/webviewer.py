@@ -1087,6 +1087,14 @@ class VocalizationHandler(BaseHTTPRequestHandler):
     def apply_update(self):
         """Apply the update by pulling from git and restarting services."""
         try:
+            # Reset any local changes first (users shouldn't modify installed files)
+            subprocess.run(
+                ["git", "reset", "--hard", "HEAD"],
+                capture_output=True,
+                text=True,
+                cwd=INSTALL_DIR
+            )
+
             # Pull latest changes (explicitly specify origin/master to avoid tracking issues)
             result = subprocess.run(
                 ["git", "pull", "origin", "master"],
