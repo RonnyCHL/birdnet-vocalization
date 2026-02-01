@@ -930,7 +930,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
                 tbody.innerHTML = data.map(row => `
                     <tr class="clickable">
-                        <td>${new Date(row.classified_at).toLocaleString()}</td>
+                        <td>${new Date(row.classified_at + 'Z').toLocaleString()}</td>
                         <td>${row.common_name}</td>
                         <td class="type-${row.vocalization_type}">${(row.vocalization_type_display || row.vocalization_type).toUpperCase()}</td>
                         <td><span class="confidence">${Math.round(row.confidence * 100)}%</span></td>
