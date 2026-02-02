@@ -45,7 +45,14 @@ class FeedbackHandler(BaseHTTPRequestHandler):
 
     def send_json(self, data, status=200):
         """Send JSON response."""
-        body = json.dumps(data).encode('utf-8')
+        from decimal import Decimal
+
+        def convert(obj):
+            if isinstance(obj, Decimal):
+                return float(obj)
+            raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+        body = json.dumps(data, default=convert).encode('utf-8')
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Content-Length', len(body))
