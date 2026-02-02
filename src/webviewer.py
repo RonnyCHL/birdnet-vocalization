@@ -82,6 +82,31 @@ TRANSLATIONS = {
         'later': 'Later',
         'csv': 'CSV',
         'json': 'JSON',
+        'feedback_info_title': 'How Feedback Works',
+        'feedback_thumbs_up': 'THUMBS UP = Classification is CORRECT',
+        'feedback_thumbs_up_desc': 'The model correctly identified song/call/alarm',
+        'feedback_thumbs_down': 'THUMBS DOWN = Classification is WRONG',
+        'feedback_thumbs_down_desc': 'The model made a mistake',
+        'feedback_share_title': 'SHARE BUTTON (top right)',
+        'feedback_share_desc': 'When enabled, your feedback helps improve models for everyone!',
+        'feedback_what_shared': 'What gets shared (opt-in only):',
+        'feedback_shared_species': 'Species name (e.g., "Great Tit")',
+        'feedback_shared_type': 'Predicted type (song/call/alarm)',
+        'feedback_shared_correct': 'Whether you marked it correct or wrong',
+        'feedback_shared_id': 'Anonymous installation ID',
+        'feedback_never_shared': 'What is NEVER shared:',
+        'feedback_never_location': 'Your location',
+        'feedback_never_ip': 'Your IP address',
+        'feedback_never_audio': 'Audio files',
+        'feedback_never_personal': 'Any personal information',
+        'feedback_consent_enable': 'Enable Community Feedback Sharing?',
+        'feedback_consent_help': 'Your feedback will help improve vocalization models for all BirdNET users!',
+        'feedback_consent_disable': 'Disable feedback sharing?',
+        'feedback_consent_local': 'Your feedback will only be stored locally.',
+        'feedback_enable_question': 'Enable sharing?',
+        'feedback_correct_tooltip': 'Classification is correct - helps improve models',
+        'feedback_incorrect_tooltip': 'Classification is wrong - helps improve models',
+        'feedback_column_tooltip': '👍 = Correct, 👎 = Wrong. Click ❓ above for more info',
     },
     'nl': {
         'title': 'BirdNET Vocalisatie',
@@ -124,6 +149,31 @@ TRANSLATIONS = {
         'later': 'Later',
         'csv': 'CSV',
         'json': 'JSON',
+        'feedback_info_title': 'Hoe Feedback Werkt',
+        'feedback_thumbs_up': 'DUIM OMHOOG = Classificatie is CORRECT',
+        'feedback_thumbs_up_desc': 'Het model heeft zang/roep/alarm correct herkend',
+        'feedback_thumbs_down': 'DUIM OMLAAG = Classificatie is FOUT',
+        'feedback_thumbs_down_desc': 'Het model heeft een fout gemaakt',
+        'feedback_share_title': 'DEEL KNOP (rechtsboven)',
+        'feedback_share_desc': 'Wanneer ingeschakeld, helpt jouw feedback om modellen te verbeteren voor iedereen!',
+        'feedback_what_shared': 'Wat wordt gedeeld (alleen met toestemming):',
+        'feedback_shared_species': 'Soortnaam (bijv. "Koolmees")',
+        'feedback_shared_type': 'Voorspeld type (zang/roep/alarm)',
+        'feedback_shared_correct': 'Of je het correct of fout markeerde',
+        'feedback_shared_id': 'Anonieme installatie-ID',
+        'feedback_never_shared': 'Wat NOOIT wordt gedeeld:',
+        'feedback_never_location': 'Je locatie',
+        'feedback_never_ip': 'Je IP-adres',
+        'feedback_never_audio': 'Audiobestanden',
+        'feedback_never_personal': 'Persoonlijke informatie',
+        'feedback_consent_enable': 'Community Feedback Delen Inschakelen?',
+        'feedback_consent_help': 'Jouw feedback helpt vocalisatiemodellen verbeteren voor alle BirdNET gebruikers!',
+        'feedback_consent_disable': 'Feedback delen uitschakelen?',
+        'feedback_consent_local': 'Je feedback wordt alleen lokaal opgeslagen.',
+        'feedback_enable_question': 'Delen inschakelen?',
+        'feedback_correct_tooltip': 'Classificatie is correct - helpt modellen verbeteren',
+        'feedback_incorrect_tooltip': 'Classificatie is fout - helpt modellen verbeteren',
+        'feedback_column_tooltip': '👍 = Correct, 👎 = Fout. Klik ❓ hierboven voor meer info',
     },
     'de': {
         'title': 'BirdNET Vokalisation',
@@ -166,6 +216,31 @@ TRANSLATIONS = {
         'later': 'Später',
         'csv': 'CSV',
         'json': 'JSON',
+        'feedback_info_title': 'Wie Feedback Funktioniert',
+        'feedback_thumbs_up': 'DAUMEN HOCH = Klassifizierung ist KORREKT',
+        'feedback_thumbs_up_desc': 'Das Modell hat Gesang/Ruf/Alarm korrekt erkannt',
+        'feedback_thumbs_down': 'DAUMEN RUNTER = Klassifizierung ist FALSCH',
+        'feedback_thumbs_down_desc': 'Das Modell hat einen Fehler gemacht',
+        'feedback_share_title': 'TEILEN-BUTTON (oben rechts)',
+        'feedback_share_desc': 'Wenn aktiviert, hilft Ihr Feedback, die Modelle für alle zu verbessern!',
+        'feedback_what_shared': 'Was geteilt wird (nur mit Zustimmung):',
+        'feedback_shared_species': 'Artname (z.B. "Kohlmeise")',
+        'feedback_shared_type': 'Vorhergesagter Typ (Gesang/Ruf/Alarm)',
+        'feedback_shared_correct': 'Ob Sie es als korrekt oder falsch markiert haben',
+        'feedback_shared_id': 'Anonyme Installations-ID',
+        'feedback_never_shared': 'Was NIEMALS geteilt wird:',
+        'feedback_never_location': 'Ihr Standort',
+        'feedback_never_ip': 'Ihre IP-Adresse',
+        'feedback_never_audio': 'Audiodateien',
+        'feedback_never_personal': 'Persönliche Informationen',
+        'feedback_consent_enable': 'Community-Feedback-Freigabe aktivieren?',
+        'feedback_consent_help': 'Ihr Feedback hilft, Vokalisationsmodelle für alle BirdNET-Nutzer zu verbessern!',
+        'feedback_consent_disable': 'Feedback-Freigabe deaktivieren?',
+        'feedback_consent_local': 'Ihr Feedback wird nur lokal gespeichert.',
+        'feedback_enable_question': 'Freigabe aktivieren?',
+        'feedback_correct_tooltip': 'Klassifizierung korrekt - hilft Modelle verbessern',
+        'feedback_incorrect_tooltip': 'Klassifizierung falsch - hilft Modelle verbessern',
+        'feedback_column_tooltip': '👍 = Korrekt, 👎 = Falsch. Klicken Sie ❓ oben für mehr Info',
     },
     'sv': {
         'title': 'BirdNET Vokalisering',
@@ -208,6 +283,31 @@ TRANSLATIONS = {
         'later': 'Senare',
         'csv': 'CSV',
         'json': 'JSON',
+        'feedback_info_title': 'Hur Feedback Fungerar',
+        'feedback_thumbs_up': 'TUMME UPP = Klassificeringen är KORREKT',
+        'feedback_thumbs_up_desc': 'Modellen identifierade sång/läte/varning korrekt',
+        'feedback_thumbs_down': 'TUMME NER = Klassificeringen är FEL',
+        'feedback_thumbs_down_desc': 'Modellen gjorde ett misstag',
+        'feedback_share_title': 'DELA-KNAPP (uppe till höger)',
+        'feedback_share_desc': 'När aktiverat hjälper din feedback att förbättra modeller för alla!',
+        'feedback_what_shared': 'Vad som delas (endast med samtycke):',
+        'feedback_shared_species': 'Artnamn (t.ex. "Talgoxe")',
+        'feedback_shared_type': 'Förutsagd typ (sång/läte/varning)',
+        'feedback_shared_correct': 'Om du markerade det som korrekt eller fel',
+        'feedback_shared_id': 'Anonymt installations-ID',
+        'feedback_never_shared': 'Vad som ALDRIG delas:',
+        'feedback_never_location': 'Din plats',
+        'feedback_never_ip': 'Din IP-adress',
+        'feedback_never_audio': 'Ljudfiler',
+        'feedback_never_personal': 'Personlig information',
+        'feedback_consent_enable': 'Aktivera delning av community-feedback?',
+        'feedback_consent_help': 'Din feedback hjälper till att förbättra vokaliseringsmodeller för alla BirdNET-användare!',
+        'feedback_consent_disable': 'Inaktivera feedback-delning?',
+        'feedback_consent_local': 'Din feedback sparas endast lokalt.',
+        'feedback_enable_question': 'Aktivera delning?',
+        'feedback_correct_tooltip': 'Klassificering korrekt - hjälper förbättra modeller',
+        'feedback_incorrect_tooltip': 'Klassificering fel - hjälper förbättra modeller',
+        'feedback_column_tooltip': '👍 = Korrekt, 👎 = Fel. Klicka ❓ ovan för mer info',
     },
 }
 
@@ -949,7 +1049,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                         <th data-i18n="confidence">Confidence</th>
                         <th class="spectrogram-cell">Spectrogram</th>
                         <th data-i18n="audio">Audio</th>
-                        <th data-i18n="feedback" title="👍 = Correct, 👎 = Wrong. Click ❓ above for more info">Feedback ❓</th>
+                        <th data-i18n="feedback" data-i18n-title="feedback_column_tooltip" title="👍 = Correct, 👎 = Wrong. Click ❓ above for more info">Feedback ❓</th>
                     </tr>
                 </thead>
                 <tbody id="results"></tbody>
@@ -1058,6 +1158,10 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {{
                 const key = el.getAttribute('data-i18n-placeholder');
                 if (t[key]) el.placeholder = t[key];
+            }});
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {{
+                const key = el.getAttribute('data-i18n-title');
+                if (t[key]) el.title = t[key];
             }});
             document.getElementById('lang-select').value = currentLang;
         }}
@@ -1363,8 +1467,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                         </td>
                         <td><button class="play-btn" onclick="playAudio('${{row.file_name}}', '${{row.common_name}}')" ${{row.file_name ? '' : 'disabled'}}>▶</button></td>
                         <td class="feedback-btns" id="feedback-${{row.id}}">
-                            <button class="feedback-btn" onclick="sendFeedback(${{row.id}}, true, this)" title="Classification is correct - helps improve models">👍</button>
-                            <button class="feedback-btn" onclick="sendFeedback(${{row.id}}, false, this)" title="Classification is wrong - helps improve models">👎</button>
+                            <button class="feedback-btn" onclick="sendFeedback(${{row.id}}, true, this)" title="${{t('feedback_correct_tooltip')}}">👍</button>
+                            <button class="feedback-btn" onclick="sendFeedback(${{row.id}}, false, this)" title="${{t('feedback_incorrect_tooltip')}}">👎</button>
                         </td>
                     </tr>
                     `;
@@ -1616,28 +1720,28 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         }}
 
         function showFeedbackInfo() {{
-            alert(`🐦 How Feedback Works
+            alert(`🐦 ${{t('feedback_info_title')}}
 
-👍 THUMBS UP = Classification is CORRECT
-   The model correctly identified song/call/alarm
+👍 ${{t('feedback_thumbs_up')}}
+   ${{t('feedback_thumbs_up_desc')}}
 
-👎 THUMBS DOWN = Classification is WRONG
-   The model made a mistake
+👎 ${{t('feedback_thumbs_down')}}
+   ${{t('feedback_thumbs_down_desc')}}
 
-📤 SHARE BUTTON (top right)
-   When enabled, your feedback helps improve models for everyone!
+📤 ${{t('feedback_share_title')}}
+   ${{t('feedback_share_desc')}}
 
-What gets shared (opt-in only):
-• Species name (e.g., "Great Tit")
-• Predicted type (song/call/alarm)
-• Whether you marked it correct or wrong
-• Anonymous installation ID
+${{t('feedback_what_shared')}}
+• ${{t('feedback_shared_species')}}
+• ${{t('feedback_shared_type')}}
+• ${{t('feedback_shared_correct')}}
+• ${{t('feedback_shared_id')}}
 
-What is NEVER shared:
-• Your location
-• Your IP address
-• Audio files
-• Any personal information
+${{t('feedback_never_shared')}}
+• ${{t('feedback_never_location')}}
+• ${{t('feedback_never_ip')}}
+• ${{t('feedback_never_audio')}}
+• ${{t('feedback_never_personal')}}
 
 Dashboard: http://feedback.ronnyhullegie.nl:8089`);
         }}
@@ -1645,26 +1749,26 @@ Dashboard: http://feedback.ronnyhullegie.nl:8089`);
         async function toggleConsent() {{
             const newConsent = !feedbackConsent;
             const msg = newConsent
-                ? `Enable Community Feedback Sharing?
+                ? `${{t('feedback_consent_enable')}}
 
-Your feedback will help improve vocalization models for all BirdNET users!
+${{t('feedback_consent_help')}}
 
-✅ What gets shared:
-• Species name
-• Predicted type (song/call/alarm)
-• Correct or incorrect rating
-• Anonymous ID (random, not linked to you)
+✅ ${{t('feedback_what_shared')}}
+• ${{t('feedback_shared_species')}}
+• ${{t('feedback_shared_type')}}
+• ${{t('feedback_shared_correct')}}
+• ${{t('feedback_shared_id')}}
 
-❌ What is NEVER shared:
-• Your location or IP address
-• Audio recordings
-• Any personal information
+❌ ${{t('feedback_never_shared')}}
+• ${{t('feedback_never_location')}} / ${{t('feedback_never_ip')}}
+• ${{t('feedback_never_audio')}}
+• ${{t('feedback_never_personal')}}
 
 View community statistics at:
 http://feedback.ronnyhullegie.nl:8089
 
-Enable sharing?`
-                : 'Disable feedback sharing?\\n\\nYour feedback will only be stored locally.';
+${{t('feedback_enable_question')}}`
+                : `${{t('feedback_consent_disable')}}\\n\\n${{t('feedback_consent_local')}}`;
 
             if (confirm(msg)) {{
                 try {{
