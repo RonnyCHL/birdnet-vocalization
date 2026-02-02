@@ -243,6 +243,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             self.check_update()
         elif parsed.path == "/api/confidence-histogram":
             self.send_confidence_histogram()
+        elif parsed.path == "/api/spectrogram/status":
+            self.send_spectrogram_status()
         else:
             self.send_error(404, "Not Found")
 
@@ -253,6 +255,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             self.apply_update()
         elif parsed.path == "/api/feedback":
             self.save_feedback()
+        elif parsed.path == "/api/spectrogram/install":
+            self.install_spectrogram_deps()
         else:
             self.send_error(404, "Not Found")
 
@@ -988,7 +992,15 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         <div class="spectrogram-modal-content" onclick="event.stopPropagation()">
             <button class="close-btn" onclick="closeSpectrogram()">×</button>
             <h3 id="spectrogram-title">Spectrogram</h3>
-            <img id="spectrogram-image" src="" alt="Spectrogram">
+            <img id="spectrogram-image" src="" alt="Spectrogram" style="display:none">
+            <div id="spectrogram-install" style="display:none; text-align:center; padding:20px;">
+                <p style="color:var(--text-secondary); margin-bottom:15px;">Spectrogram requires matplotlib & librosa</p>
+                <button class="modal-btn primary" onclick="installSpectrogramDeps()">Install Dependencies</button>
+                <p id="install-status" style="margin-top:10px; font-size:12px;"></p>
+            </div>
+            <div id="spectrogram-loading" style="display:none; text-align:center; padding:40px; color:var(--text-secondary);">
+                Loading spectrogram...
+            </div>
         </div>
     </div>
 
@@ -1153,10 +1165,67 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         }});
 
         // Spectrogram
-        function showSpectrogram(filename, species) {{
+        let spectrogramAvailable = null;
+
+        async function checkSpectrogramStatus() {{
+            if (spectrogramAvailable !== null) return spectrogramAvailable;
+            try {{
+                const res = await fetch('/api/spectrogram/status');
+                const data = await res.json();
+                spectrogramAvailable = data.available;
+                return spectrogramAvailable;
+            }} catch (e) {{
+                return false;
+            }}
+        }}
+
+        async function showSpectrogram(filename, species) {{
+            const modal = document.getElementById('spectrogram-modal');
+            const img = document.getElementById('spectrogram-image');
+            const installDiv = document.getElementById('spectrogram-install');
+            const loadingDiv = document.getElementById('spectrogram-loading');
+
             document.getElementById('spectrogram-title').textContent = species + ' - Spectrogram';
-            document.getElementById('spectrogram-image').src = '/api/spectrogram?file=' + encodeURIComponent(filename);
-            document.getElementById('spectrogram-modal').classList.add('visible');
+            img.style.display = 'none';
+            installDiv.style.display = 'none';
+            loadingDiv.style.display = 'block';
+            modal.classList.add('visible');
+
+            const available = await checkSpectrogramStatus();
+            loadingDiv.style.display = 'none';
+
+            if (available) {{
+                img.src = '/api/spectrogram?file=' + encodeURIComponent(filename);
+                img.style.display = 'block';
+            }} else {{
+                installDiv.style.display = 'block';
+                document.getElementById('install-status').textContent = '';
+            }}
+        }}
+
+        async function installSpectrogramDeps() {{
+            const statusEl = document.getElementById('install-status');
+            statusEl.textContent = 'Installing matplotlib & librosa... (this may take a few minutes)';
+            statusEl.style.color = 'var(--accent)';
+
+            try {{
+                const res = await fetch('/api/spectrogram/install', {{ method: 'POST' }});
+                const data = await res.json();
+
+                if (data.success) {{
+                    statusEl.textContent = 'Installed! Service restarting...';
+                    statusEl.style.color = 'var(--accent)';
+                    setTimeout(() => {{
+                        window.location.reload();
+                    }}, 3000);
+                }} else {{
+                    statusEl.textContent = 'Error: ' + data.error;
+                    statusEl.style.color = 'var(--danger)';
+                }}
+            }} catch (e) {{
+                statusEl.textContent = 'Error: ' + e.message;
+                statusEl.style.color = 'var(--danger)';
+            }}
         }}
 
         function closeSpectrogram(e) {{
@@ -1645,19 +1714,73 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             self.wfile.write(buf.getvalue())
 
         except ImportError:
-            self._send_spectrogram_placeholder()
+            self._send_spectrogram_placeholder(missing_deps=True)
         except Exception as e:
-            self._send_spectrogram_placeholder()
+            self._send_spectrogram_placeholder(missing_deps=False)
 
-    def _send_spectrogram_placeholder(self):
-        """Send a placeholder image when spectrogram can't be generated."""
-        # Simple 1x1 gray pixel PNG
-        placeholder = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82'
-        self.send_response(200)
-        self.send_header("Content-Type", "image/png")
-        self.send_header("Content-Length", len(placeholder))
-        self.end_headers()
-        self.wfile.write(placeholder)
+    def _send_spectrogram_placeholder(self, missing_deps=False):
+        """Send a placeholder SVG when spectrogram can't be generated."""
+        if missing_deps:
+            # SVG placeholder asking to install dependencies
+            svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="400" height="100" viewBox="0 0 400 100">
+  <rect width="100%" height="100%" fill="#1a1a2e"/>
+  <text x="200" y="35" text-anchor="middle" fill="#888" font-family="sans-serif" font-size="12">Spectrogram requires matplotlib</text>
+  <rect x="140" y="50" width="120" height="30" rx="5" fill="#4ecca3" class="install-btn" style="cursor:pointer"/>
+  <text x="200" y="70" text-anchor="middle" fill="#1a1a2e" font-family="sans-serif" font-size="12" font-weight="bold" style="pointer-events:none">Install Now</text>
+</svg>'''
+            self.send_response(200)
+            self.send_header("Content-Type", "image/svg+xml")
+            self.send_header("Content-Length", len(svg.encode('utf-8')))
+            self.send_header("X-Spectrogram-Status", "missing-deps")
+            self.end_headers()
+            self.wfile.write(svg.encode('utf-8'))
+        else:
+            # Simple gray placeholder for other errors
+            placeholder = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82'
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png")
+            self.send_header("Content-Length", len(placeholder))
+            self.end_headers()
+            self.wfile.write(placeholder)
+
+    def send_spectrogram_status(self):
+        """Check if spectrogram dependencies are available."""
+        try:
+            import matplotlib
+            import librosa
+            self.send_json({"available": True})
+        except ImportError as e:
+            missing = str(e).split("'")[1] if "'" in str(e) else "matplotlib/librosa"
+            self.send_json({"available": False, "missing": missing})
+
+    def install_spectrogram_deps(self):
+        """Install matplotlib and librosa for spectrogram generation."""
+        try:
+            venv_pip = INSTALL_DIR / "venv" / "bin" / "pip3"
+            if not venv_pip.exists():
+                self.send_json({"success": False, "error": "Virtual environment not found"})
+                return
+
+            result = subprocess.run(
+                [str(venv_pip), "install", "matplotlib", "librosa", "--quiet"],
+                capture_output=True, text=True, timeout=300
+            )
+
+            if result.returncode != 0:
+                self.send_json({"success": False, "error": result.stderr})
+                return
+
+            self.send_json({"success": True, "message": "Dependencies installed! Restarting service..."})
+
+            # Restart service to pick up new dependencies
+            subprocess.Popen(
+                ["bash", "-c", "sleep 2 && sudo systemctl restart birdnet-vocalization-viewer"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True
+            )
+        except subprocess.TimeoutExpired:
+            self.send_json({"success": False, "error": "Installation timed out"})
+        except Exception as e:
+            self.send_json({"success": False, "error": str(e)})
 
     def _find_audio_file(self, filename):
         """Find audio file in various locations."""
