@@ -327,20 +327,38 @@ fi
 echo "Installing Python packages (this may take a few minutes)..."
 "$PIP_BIN" install --upgrade pip --quiet
 
-# Detect architecture and install appropriate PyTorch version
+# Detect architecture and Python version for PyTorch compatibility
 ARCH=$(uname -m)
+PYTHON_VERSION=$("$PYTHON_BIN" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+echo "Detected: $ARCH, Python $PYTHON_VERSION"
+
+# Install PyTorch based on architecture and Python version
 if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "armv7l" ]; then
-    # Raspberry Pi (ARM) - use piwheels compatible version
-    echo "Detected Raspberry Pi ($ARCH), installing compatible PyTorch..."
-    "$PIP_BIN" install torch==2.0.1 --extra-index-url https://www.piwheels.org/simple --quiet
+    # Raspberry Pi (ARM)
+    # Python 3.12+ (Debian Trixie, Bookworm newer) needs PyTorch 2.2+
+    # Python 3.11 and older can use PyTorch 2.0.1 from piwheels
+    case "$PYTHON_VERSION" in
+        3.9|3.10|3.11)
+            echo "Installing PyTorch 2.0.1 from piwheels..."
+            "$PIP_BIN" install torch==2.0.1 --extra-index-url https://www.piwheels.org/simple --quiet
+            "$PIP_BIN" install "numpy<2" --quiet  # NumPy 1.x for PyTorch 2.0.1
+            ;;
+        *)
+            # Python 3.12+ needs newer PyTorch
+            echo "Installing PyTorch 2.2+ for Python $PYTHON_VERSION..."
+            "$PIP_BIN" install torch --index-url https://download.pytorch.org/whl/cpu --quiet
+            "$PIP_BIN" install numpy --quiet  # NumPy 2.x works with PyTorch 2.2+
+            ;;
+    esac
 else
-    # x86/x64 - use standard PyTorch
-    "$PIP_BIN" install torch==2.0.1 --quiet
+    # x86/x64 - use standard PyTorch (CPU version to keep it small)
+    echo "Installing PyTorch for $ARCH..."
+    "$PIP_BIN" install torch --index-url https://download.pytorch.org/whl/cpu --quiet
+    "$PIP_BIN" install numpy --quiet
 fi
 
-# NumPy 2.x is incompatible with PyTorch 2.0.1, pin to 1.x
 # librosa + matplotlib for spectrogram generation and visualization
-"$PIP_BIN" install "numpy<2" librosa matplotlib scikit-image huggingface_hub --quiet
+"$PIP_BIN" install librosa matplotlib scikit-image huggingface_hub --quiet
 
 # Download models from Hugging Face
 echo -e "${BLUE}[5/7] Downloading models from Hugging Face ($MODEL_SIZE)...${NC}"
