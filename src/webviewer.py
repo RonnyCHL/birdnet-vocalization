@@ -880,9 +880,10 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                     <option value="de">Deutsch</option>
                     <option value="sv">Svenska</option>
                 </select>
-                <button class="theme-toggle" id="consent-toggle" onclick="toggleConsent()" title="Share feedback to help improve models">
+                <button class="theme-toggle" id="consent-toggle" onclick="toggleConsent()" title="Share feedback with community (click for info)">
                     <span id="consent-icon">📤</span>
                 </button>
+                <button class="theme-toggle" onclick="showFeedbackInfo()" title="What is feedback sharing?">❓</button>
                 <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
                 <div class="update-indicator">
                     <span class="version-info" id="version-info"></span>
@@ -948,7 +949,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                         <th data-i18n="confidence">Confidence</th>
                         <th class="spectrogram-cell">Spectrogram</th>
                         <th data-i18n="audio">Audio</th>
-                        <th data-i18n="feedback">Feedback</th>
+                        <th data-i18n="feedback" title="👍 = Correct, 👎 = Wrong. Click ❓ above for more info">Feedback ❓</th>
                     </tr>
                 </thead>
                 <tbody id="results"></tbody>
@@ -1362,8 +1363,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                         </td>
                         <td><button class="play-btn" onclick="playAudio('${{row.file_name}}', '${{row.common_name}}')" ${{row.file_name ? '' : 'disabled'}}>▶</button></td>
                         <td class="feedback-btns" id="feedback-${{row.id}}">
-                            <button class="feedback-btn" onclick="sendFeedback(${{row.id}}, true, this)" title="Correct">👍</button>
-                            <button class="feedback-btn" onclick="sendFeedback(${{row.id}}, false, this)" title="Incorrect">👎</button>
+                            <button class="feedback-btn" onclick="sendFeedback(${{row.id}}, true, this)" title="Classification is correct - helps improve models">👍</button>
+                            <button class="feedback-btn" onclick="sendFeedback(${{row.id}}, false, this)" title="Classification is wrong - helps improve models">👎</button>
                         </td>
                     </tr>
                     `;
@@ -1614,11 +1615,56 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             }}
         }}
 
+        function showFeedbackInfo() {{
+            alert(`🐦 How Feedback Works
+
+👍 THUMBS UP = Classification is CORRECT
+   The model correctly identified song/call/alarm
+
+👎 THUMBS DOWN = Classification is WRONG
+   The model made a mistake
+
+📤 SHARE BUTTON (top right)
+   When enabled, your feedback helps improve models for everyone!
+
+What gets shared (opt-in only):
+• Species name (e.g., "Great Tit")
+• Predicted type (song/call/alarm)
+• Whether you marked it correct or wrong
+• Anonymous installation ID
+
+What is NEVER shared:
+• Your location
+• Your IP address
+• Audio files
+• Any personal information
+
+Dashboard: http://feedback.ronnyhullegie.nl:8089`);
+        }}
+
         async function toggleConsent() {{
             const newConsent = !feedbackConsent;
             const msg = newConsent
-                ? 'Share your feedback to help improve vocalization models?\\n\\nOnly classification data is shared (species, type, correct/incorrect).\\nNo personal information or location is collected.'
-                : 'Stop sharing feedback?';
+                ? `Enable Community Feedback Sharing?
+
+Your feedback will help improve vocalization models for all BirdNET users!
+
+✅ What gets shared:
+• Species name
+• Predicted type (song/call/alarm)
+• Correct or incorrect rating
+• Anonymous ID (random, not linked to you)
+
+❌ What is NEVER shared:
+• Your location or IP address
+• Audio recordings
+• Any personal information
+
+View community statistics at:
+http://feedback.ronnyhullegie.nl:8089
+
+Enable sharing?`
+                : 'Disable feedback sharing?\\n\\nYour feedback will only be stored locally.';
 
             if (confirm(msg)) {{
                 try {{
