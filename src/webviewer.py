@@ -36,6 +36,10 @@ DEFAULT_DATA_DIR = Path("/opt/birdnet-vocalization/data")
 INSTALL_DIR = Path("/opt/birdnet-vocalization")
 GITHUB_API_URL = "https://api.github.com/repos/RonnyCHL/birdnet-vocalization/commits/master"
 
+# Central feedback server (opt-in)
+FEEDBACK_SERVER_URL = "http://feedback.birdnet-vocalization.org/api/feedback"
+# For self-hosted: change to your server URL, e.g., "http://192.168.1.25:8089/api/feedback"
+
 # UI Translations
 TRANSLATIONS = {
     'en': {
@@ -245,6 +249,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             self.send_confidence_histogram()
         elif parsed.path == "/api/spectrogram/status":
             self.send_spectrogram_status()
+        elif parsed.path == "/api/feedback/consent":
+            self.get_feedback_consent_status()
         else:
             self.send_error(404, "Not Found")
 
@@ -257,6 +263,8 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             self.save_feedback()
         elif parsed.path == "/api/spectrogram/install":
             self.install_spectrogram_deps()
+        elif parsed.path == "/api/feedback/consent":
+            self.set_feedback_consent()
         else:
             self.send_error(404, "Not Found")
 
@@ -873,6 +881,9 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                     <option value="de">Deutsch</option>
                     <option value="sv">Svenska</option>
                 </select>
+                <button class="theme-toggle" id="consent-toggle" onclick="toggleConsent()" title="Share feedback to help improve models">
+                    <span id="consent-icon">📤</span>
+                </button>
                 <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
                 <div class="update-indicator">
                     <span class="version-info" id="version-info"></span>
@@ -1578,6 +1589,54 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             }}
         }}
 
+        // Consent for central feedback
+        let feedbackConsent = false;
+
+        async function checkConsent() {{
+            try {{
+                const res = await fetch('/api/feedback/consent');
+                const data = await res.json();
+                feedbackConsent = data.consented;
+                updateConsentIcon();
+            }} catch (e) {{ console.error('Consent check error:', e); }}
+        }}
+
+        function updateConsentIcon() {{
+            const icon = document.getElementById('consent-icon');
+            const btn = document.getElementById('consent-toggle');
+            if (feedbackConsent) {{
+                icon.textContent = '📤';
+                btn.style.background = 'var(--accent)';
+                btn.title = 'Sharing feedback (click to disable)';
+            }} else {{
+                icon.textContent = '📥';
+                btn.style.background = '';
+                btn.title = 'Share feedback to help improve models';
+            }}
+        }}
+
+        async function toggleConsent() {{
+            const newConsent = !feedbackConsent;
+            const msg = newConsent
+                ? 'Share your feedback to help improve vocalization models?\\n\\nOnly classification data is shared (species, type, correct/incorrect).\\nNo personal information or location is collected.'
+                : 'Stop sharing feedback?';
+
+            if (confirm(msg)) {{
+                try {{
+                    const res = await fetch('/api/feedback/consent', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ consent: newConsent }})
+                    }});
+                    const data = await res.json();
+                    if (data.success) {{
+                        feedbackConsent = data.consented;
+                        updateConsentIcon();
+                    }}
+                }} catch (e) {{ console.error('Consent toggle error:', e); }}
+            }}
+        }}
+
         // Initialize
         function init() {{
             if (initialized) return;
@@ -1590,6 +1649,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
                 initTheme();
                 applyTranslations();
+                checkConsent();
                 checkUpdate();
                 loadStats();
                 loadData();
@@ -1914,7 +1974,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             self.send_json({"success": False, "error": str(e)})
 
     def save_feedback(self):
-        """Save user feedback."""
+        """Save user feedback locally and optionally to central server."""
         try:
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length).decode('utf-8')
@@ -1930,8 +1990,10 @@ class VocalizationHandler(BaseHTTPRequestHandler):
 
             db_path = self.data_dir / "vocalization.db"
             conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
 
+            # Ensure feedback table exists
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS feedback (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1943,14 +2005,103 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                 )
             """)
 
+            # Save locally
             cursor.execute(
                 "INSERT INTO feedback (vocalization_id, is_correct, correct_type) VALUES (?, ?, ?)",
                 (vocalization_id, is_correct, correct_type)
             )
             conn.commit()
+
+            # Get vocalization details for central server
+            cursor.execute(
+                "SELECT * FROM vocalizations WHERE id = ?",
+                (vocalization_id,)
+            )
+            voc = cursor.fetchone()
             conn.close()
 
+            # Send to central server (non-blocking, best-effort)
+            if voc and self._get_feedback_consent():
+                self._send_to_central_server(voc, is_correct, correct_type)
+
             self.send_json({"success": True})
+        except Exception as e:
+            self.send_json({"success": False, "error": str(e)})
+
+    def _get_feedback_consent(self):
+        """Check if user has opted in to central feedback collection."""
+        consent_file = self.data_dir / ".feedback_consent"
+        return consent_file.exists()
+
+    def _get_installation_id(self):
+        """Get or create anonymous installation ID."""
+        import hashlib
+        import uuid
+        id_file = self.data_dir / ".installation_id"
+        if id_file.exists():
+            return id_file.read_text().strip()
+        # Generate new ID based on random UUID (no personal info)
+        new_id = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()[:16]
+        id_file.write_text(new_id)
+        return new_id
+
+    def _send_to_central_server(self, voc, is_correct, correct_type):
+        """Send feedback to central server (best-effort, non-blocking)."""
+        import threading
+
+        def send():
+            try:
+                payload = {
+                    'species_scientific': voc['scientific_name'] if 'scientific_name' in voc.keys() else None,
+                    'species_common': voc['common_name'] if 'common_name' in voc.keys() else None,
+                    'predicted_type': voc['vocalization_type'] if 'vocalization_type' in voc.keys() else None,
+                    'correct_type': correct_type,
+                    'is_correct': is_correct,
+                    'confidence': voc['confidence'] if 'confidence' in voc.keys() else None,
+                    'audio_filename': voc['file_name'] if 'file_name' in voc.keys() else None,
+                    'source_id': self._get_installation_id(),
+                    'birdnet_confidence': voc['birdnet_confidence'] if 'birdnet_confidence' in voc.keys() else None,
+                    'detection_time': voc['detection_time'] if 'detection_time' in voc.keys() else None,
+                }
+
+                req = urllib.request.Request(
+                    FEEDBACK_SERVER_URL,
+                    data=json.dumps(payload).encode('utf-8'),
+                    headers={'Content-Type': 'application/json'},
+                    method='POST'
+                )
+                urllib.request.urlopen(req, timeout=5)
+            except Exception:
+                pass  # Best effort - don't fail if central server is down
+
+        # Run in background thread to not block response
+        threading.Thread(target=send, daemon=True).start()
+
+    def get_feedback_consent_status(self):
+        """Get current consent status for central feedback."""
+        consent_file = self.data_dir / ".feedback_consent"
+        self.send_json({
+            "consented": consent_file.exists(),
+            "installation_id": self._get_installation_id() if consent_file.exists() else None
+        })
+
+    def set_feedback_consent(self):
+        """Set consent for central feedback collection."""
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length).decode('utf-8')
+            data = json.loads(body)
+
+            consent = data.get('consent', False)
+            consent_file = self.data_dir / ".feedback_consent"
+
+            if consent:
+                consent_file.write_text(datetime.now().isoformat())
+                self.send_json({"success": True, "consented": True})
+            else:
+                if consent_file.exists():
+                    consent_file.unlink()
+                self.send_json({"success": True, "consented": False})
         except Exception as e:
             self.send_json({"success": False, "error": str(e)})
 

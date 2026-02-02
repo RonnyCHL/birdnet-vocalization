@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  vocalization-feedback:
+    build: .
+    container_name: vocalization-feedback
+    restart: unless-stopped
+    ports:
+      - "8089:8089"
+    environment:
+      - PG_HOST=192.168.1.25
+      - PG_PORT=5433
+      - PG_DB=emsn
+      - PG_USER=birdpi_zolder
+      - PG_PASS=${PG_PASS}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8089/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
