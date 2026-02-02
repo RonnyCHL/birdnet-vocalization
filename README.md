@@ -6,6 +6,8 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](VERSION)
 
+🇳🇱 **[Nederlandse versie hieronder](#birdnet-vocalization-nederlands)** | 🇬🇧 English version first
+
 ---
 
 ## What's New in v1.1.0
