@@ -206,12 +206,29 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             flex-wrap: wrap;
             align-items: center;
         }
-        .filters select, .filters input {
+        .filters select, .filters input[type="text"] {
             padding: 10px;
             border-radius: 5px;
             border: none;
             background: var(--bg-primary);
             color: var(--text-primary);
+        }
+        .confidence-filter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .confidence-filter input[type="range"] {
+            width: 120px;
+            accent-color: var(--accent);
+        }
+        .confidence-filter .value {
+            min-width: 45px;
+            text-align: center;
+            background: var(--bg-primary);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
         }
         .refresh-btn {
             background: var(--accent);
@@ -520,6 +537,11 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                 <option value="alarm">Alarm</option>
             </select>
             <input type="text" id="filter-species" placeholder="Filter species...">
+            <div class="confidence-filter">
+                <label for="filter-confidence">Min confidence:</label>
+                <input type="range" id="filter-confidence" min="0" max="100" value="0" oninput="updateConfidenceLabel()">
+                <span class="value" id="confidence-value">0%</span>
+            </div>
             <button class="refresh-btn" onclick="loadData()">Refresh</button>
         </div>
 
@@ -910,13 +932,22 @@ class VocalizationHandler(BaseHTTPRequestHandler):
             } catch (e) { console.error('Charts error:', e); }
         }
 
+        // Confidence slider
+        function updateConfidenceLabel() {
+            const slider = document.getElementById('filter-confidence');
+            const label = document.getElementById('confidence-value');
+            label.textContent = slider.value + '%';
+        }
+
         // Data table
         async function loadData() {
             const type = document.getElementById('filter-type').value;
             const species = document.getElementById('filter-species').value;
+            const minConfidence = document.getElementById('filter-confidence').value / 100;
             let url = '/api/vocalizations?limit=100';
             if (type) url += '&type=' + type;
             if (species) url += '&species=' + encodeURIComponent(species);
+            if (minConfidence > 0) url += '&min_confidence=' + minConfidence;
 
             try {
                 const res = await fetch(url);
@@ -1010,6 +1041,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                 // Event listeners
                 document.getElementById('filter-type').addEventListener('change', loadData);
                 document.getElementById('filter-species').addEventListener('input', loadData);
+                document.getElementById('filter-confidence').addEventListener('change', loadData);
 
                 initTheme();
                 checkUpdate();
@@ -1188,6 +1220,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         limit = int(params.get("limit", [100])[0])
         voc_type = params.get("type", [None])[0]
         species = params.get("species", [None])[0]
+        min_confidence = float(params.get("min_confidence", [0])[0])
 
         db_path = self.data_dir / "vocalization.db"
         if not db_path.exists():
@@ -1207,6 +1240,9 @@ class VocalizationHandler(BaseHTTPRequestHandler):
         if species:
             query += " AND common_name LIKE ?"
             args.append(f"%{species}%")
+        if min_confidence > 0:
+            query += " AND confidence >= ?"
+            args.append(min_confidence)
 
         query += " ORDER BY COALESCE(detection_time, classified_at) DESC LIMIT ?"
         args.append(limit)
