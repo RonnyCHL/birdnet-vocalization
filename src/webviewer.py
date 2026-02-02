@@ -37,8 +37,7 @@ INSTALL_DIR = Path("/opt/birdnet-vocalization")
 GITHUB_API_URL = "https://api.github.com/repos/RonnyCHL/birdnet-vocalization/commits/master"
 
 # Central feedback server (opt-in)
-FEEDBACK_SERVER_URL = "http://feedback.birdnet-vocalization.org/api/feedback"
-# For self-hosted: change to your server URL, e.g., "http://192.168.1.25:8089/api/feedback"
+FEEDBACK_SERVER_URL = "http://feedback.ronnyhullegie.nl:8089/api/feedback"
 
 # UI Translations
 TRANSLATIONS = {
