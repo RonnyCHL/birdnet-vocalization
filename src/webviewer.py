@@ -928,9 +928,16 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                     return;
                 }
 
-                tbody.innerHTML = data.map(row => `
+                tbody.innerHTML = data.map(row => {
+                    // detection_time is already local time, classified_at is UTC
+                    let timeStr = row.display_time || row.classified_at;
+                    // Only add 'Z' suffix for classified_at (UTC), not for detection_time (local)
+                    if (!row.detection_time && row.classified_at) {
+                        timeStr = new Date(row.classified_at + 'Z').toLocaleString();
+                    }
+                    return `
                     <tr class="clickable">
-                        <td>${new Date((row.display_time || row.classified_at) + 'Z').toLocaleString()}</td>
+                        <td>${timeStr}</td>
                         <td>${row.common_name}</td>
                         <td class="type-${row.vocalization_type}">${(row.vocalization_type_display || row.vocalization_type).toUpperCase()}</td>
                         <td><span class="confidence">${Math.round(row.confidence * 100)}%</span></td>
@@ -940,7 +947,7 @@ class VocalizationHandler(BaseHTTPRequestHandler):
                             <button class="feedback-btn" onclick="sendFeedback(${row.id}, false, this)" title="Incorrect">👎</button>
                         </td>
                     </tr>
-                `).join('');
+                `}).join('');
             } catch (e) {
                 document.getElementById('results').innerHTML = '<tr><td colspan="6" class="empty">Error loading data</td></tr>';
             }
