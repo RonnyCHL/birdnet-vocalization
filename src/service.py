@@ -311,14 +311,21 @@ class VocalizationService:
             # Common name for display (in user's language)
             common_name = detection.get('Com_Name', '')
 
-            # Check if we have a model for this species (by scientific name)
-            if not self.classifier.has_model(scientific_name):
+            # Check if we have a model for this species
+            # Try scientific name first (universal), then common name (for EU models)
+            model_name = None
+            if self.classifier.has_model(scientific_name):
+                model_name = scientific_name
+            elif self.classifier.has_model(common_name):
+                model_name = common_name
+
+            if not model_name:
                 logger.warning(f"No model for: {scientific_name} ({common_name})")
                 self.last_processed_id = rowid
                 processed += 1
                 continue
 
-            logger.debug(f"Model found for: {scientific_name}")
+            logger.debug(f"Model found for: {model_name}")
 
             # Find audio file
             audio_path = self._find_audio_file(detection)
@@ -330,8 +337,8 @@ class VocalizationService:
 
             logger.debug(f"Found audio: {audio_path}")
 
-            # Classify using scientific name
-            result = self.classifier.classify(scientific_name, audio_path)
+            # Classify using the matched model name
+            result = self.classifier.classify(model_name, audio_path)
 
             if result and result['confidence'] >= MIN_CONFIDENCE:
                 self._store_result(detection, result)
