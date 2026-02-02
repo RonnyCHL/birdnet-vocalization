@@ -339,7 +339,8 @@ else
 fi
 
 # NumPy 2.x is incompatible with PyTorch 2.0.1, pin to 1.x
-"$PIP_BIN" install "numpy<2" librosa scikit-image huggingface_hub --quiet
+# librosa + matplotlib for spectrogram generation and visualization
+"$PIP_BIN" install "numpy<2" librosa matplotlib scikit-image huggingface_hub --quiet
 
 # Download models from Hugging Face
 echo -e "${BLUE}[5/7] Downloading models from Hugging Face ($MODEL_SIZE)...${NC}"
