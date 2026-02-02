@@ -4,6 +4,25 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](VERSION)
+
+---
+
+## What's New in v1.1.0
+
+- **Community Feedback System**: Help improve the models! When you rate a classification (👍/👎), your feedback is now shared (opt-in) to help train better models
+- **Spectrogram Preview**: Click on any detection to see its spectrogram visualization
+- **Easy Updates**: New `update.sh` script for one-command updates
+- **Confidence Filtering**: Slider to filter detections by confidence level
+- **Export Options**: Export your data as CSV or JSON
+
+### Update Your Installation
+
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/update.sh)
+```
+
+---
 
 > **Note:** We hope this feature will eventually be integrated into BirdNET-Pi itself. Until then, this addon provides the functionality as a separate service that works alongside your existing BirdNET-Pi installation.
 
@@ -272,6 +291,24 @@ Until then, this addon provides a safe, non-invasive way to add vocalization cla
 
 ---
 
+## Community Feedback
+
+Your feedback helps improve the models for everyone!
+
+### How it works
+1. When you click 👍 or 👎 on a classification, it's saved locally
+2. If you enable "Share Feedback" (📤 button), anonymous feedback is sent to help improve models
+3. No personal data is shared - only species, predicted type, and whether it was correct
+
+### Feedback Dashboard
+See community statistics at: [feedback.ronnyhullegie.nl:8089](http://feedback.ronnyhullegie.nl:8089)
+
+- Total feedback from all installations
+- Problem species that need model improvement
+- Model accuracy statistics
+
+---
+
 ## Contributing
 
 We welcome contributions! Use the issue templates for:
@@ -297,6 +334,22 @@ MIT License - free to use, modify, and distribute.
 # BirdNET Vocalization (Nederlands)
 
 **Voeg vocalisatie classificatie toe aan je BirdNET-Pi: zang, roep of alarm**
+
+---
+
+## Nieuw in v1.1.0
+
+- **Community Feedback Systeem**: Help de modellen verbeteren! Als je een classificatie beoordeelt (👍/👎), wordt je feedback gedeeld (opt-in) om betere modellen te trainen
+- **Spectrogram Preview**: Klik op een detectie om het spectrogram te zien
+- **Makkelijk Updaten**: Nieuw `update.sh` script voor updates met één commando
+- **Betrouwbaarheid Filter**: Slider om detecties te filteren op betrouwbaarheid
+- **Export Opties**: Exporteer je data als CSV of JSON
+
+### Update Je Installatie
+
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/RonnyCHL/birdnet-vocalization/master/update.sh)
+```
 
 ---
 
@@ -558,6 +611,24 @@ We hopen dat vocalisatie classificatie een native functie wordt in BirdNET-Pi. A
 - Vraag de functie aan in [BirdNET-Pi discussions](https://github.com/Nachtzuster/BirdNET-Pi/discussions)
 
 Tot die tijd biedt deze addon een veilige, niet-invasieve manier om vocalisatie classificatie toe te voegen.
+
+---
+
+## Community Feedback
+
+Jouw feedback helpt de modellen verbeteren voor iedereen!
+
+### Hoe het werkt
+1. Als je 👍 of 👎 klikt op een classificatie, wordt het lokaal opgeslagen
+2. Als je "Feedback Delen" (📤 knop) inschakelt, wordt anonieme feedback verstuurd om modellen te verbeteren
+3. Geen persoonlijke data wordt gedeeld - alleen soort, voorspeld type, en of het correct was
+
+### Feedback Dashboard
+Bekijk community statistieken op: [feedback.ronnyhullegie.nl:8089](http://feedback.ronnyhullegie.nl:8089)
+
+- Totaal feedback van alle installaties
+- Probleemsoorten die model verbetering nodig hebben
+- Model nauwkeurigheid statistieken
 
 ---
 
