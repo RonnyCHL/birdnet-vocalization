@@ -25,7 +25,7 @@ from psycopg2.extras import RealDictCursor
 
 # Configuration from environment
 PG_CONFIG = {
-    'host': os.environ.get('PG_HOST', '192.168.1.25'),
+    'host': os.environ.get('PG_HOST', 'localhost'),
     'port': int(os.environ.get('PG_PORT', 5433)),
     'database': os.environ.get('PG_DB', 'emsn'),
     'user': os.environ.get('PG_USER', 'birdpi_zolder'),

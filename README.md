@@ -319,7 +319,7 @@ We welcome contributions! Use the issue templates for:
 - **🐦 Species Request**: Want a new bird species? [Request it](https://github.com/RonnyCHL/birdnet-vocalization/issues/new?template=species_request.yml)
 - **📊 Model Feedback**: Classification wrong? [Let us know](https://github.com/RonnyCHL/birdnet-vocalization/issues/new?template=model_feedback.yml)
 
-Training code: See [emsn-vocalization](https://github.com/RonnyCHL/emsn-vocalization)
+Training code: available on request ([open an issue](https://github.com/RonnyCHL/birdnet-vocalization/issues)).
 
 ## Credits
 
@@ -642,7 +642,7 @@ We verwelkomen bijdragen! Gebruik de issue templates voor:
 - **🐦 Soort Aanvraag**: Wil je een nieuwe vogelsoort? [Vraag het aan](https://github.com/RonnyCHL/birdnet-vocalization/issues/new?template=species_request.yml)
 - **📊 Model Feedback**: Classificatie fout? [Laat het weten](https://github.com/RonnyCHL/birdnet-vocalization/issues/new?template=model_feedback.yml)
 
-Training code: Zie [emsn-vocalization](https://github.com/RonnyCHL/emsn-vocalization)
+Trainingscode: op aanvraag ([maak een issue aan](https://github.com/RonnyCHL/birdnet-vocalization/issues)).
 
 ## Credits
 
